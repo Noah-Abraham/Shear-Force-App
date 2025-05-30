@@ -75,8 +75,8 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
     for b in bolts:
         dx = b.x - XMC
         dy = b.y - YMC
-        xp = dy * np.sin(theta_rad) - dx * np.cos(theta_rad)
-        yp = dy * np.cos(theta_rad) + dx * np.sin(theta_rad)
+        xp = dx * np.cos(theta_rad) + dy * np.sin(theta_rad)
+        yp = -dx * np.sin(theta_rad) + dy * np.cos(theta_rad)
         IPX += b.ka * yp**2
         IPY += b.ka * xp**2
     return IPX, IPY
@@ -93,7 +93,8 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK):
         fty = MZ * rx * b.ks / RS if RS else 0.0
         vx = fx + ftx
         vy = fy + fty
-        forces.append((b.x, b.y, vx, vy))
+        vz = PZ * b.ka / sum(b.ka for b in bolts) if KAT else 0.0
+        forces.append((b.x, b.y, vx, vy, vz))
     return forces
 
 # --- DISPLAY RESULTS ---
@@ -104,31 +105,39 @@ if bolts:
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
     st.subheader("Centroid Locations")
-    st.write(f"Shear Centroid (XC, YC): ({XC:.2f}, {YC:.2f})")
-    st.write(f"Axial Centroid (XMC, YMC): ({XMC:.2f}, {YMC:.2f})")
+    st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
+    st.write(f"Axial Centroid (XMC, YMC): ({XMC:.6f}, {YMC:.6f})")
 
     st.subheader("Reference Axis Inertias")
-    st.write(f"Moment of Inertia about X (IX): {IX:.2f}")
-    st.write(f"Moment of Inertia about Y (IY): {IY:.2f}")
-    st.write(f"Product of Inertia (IXY): {IXY:.2f}")
+    st.write(f"Moment of Inertia about X (IX): {IX:.6f}")
+    st.write(f"Moment of Inertia about Y (IY): {IY:.6f}")
+    st.write(f"Product of Inertia (IXY): {IXY:.6f}")
 
     st.subheader("Principal Axes")
-    st.write(f"Rotation Angle to Principal Axis (θ): {theta:.2f} degrees")
-    st.write(f"Principal Moment IPX: {IPX:.2f}")
-    st.write(f"Principal Moment IPY: {IPY:.2f}")
+    st.write(f"Rotation Angle to Principal Axis (θ): {theta:.6f} degrees")
+    st.write(f"Principal Moment IPX: {IPX:.6f}")
+    st.write(f"Principal Moment IPY: {IPY:.6f}")
 
-    # --- FORCE VECTOR VISUALIZATION ---
+    view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
+
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
-    fig, ax = plt.subplots()
-    ax.set_title("Bolt Shear Force Vectors")
-    ax.set_xlabel("X Position")
-    ax.set_ylabel("Y Position")
-    ax.grid(True)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    ax.set_title(f"Bolt Force Vectors ({view_option})")
+    ax.set_xlabel(view_option[0] + " Position")
+    ax.set_ylabel(view_option[1] + " Position")
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-    for x, y, vx, vy in shear_forces:
-        ax.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=1, color='blue')
-        ax.plot(x, y, 'ro')  # Bolt location
+    for x, y, vx, vy, vz in shear_forces:
+        if view_option == "XY View":
+            ax.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=1, color='blue')
+            ax.plot(x, y, 'ro')
+        elif view_option == "XZ View":
+            ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=1, color='green')
+            ax.plot(x, 0, 'ro')
+        elif view_option == "YZ View":
+            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=1, color='purple')
+            ax.plot(y, 0, 'ro')
 
     ax.set_aspect('equal', 'box')
     st.pyplot(fig)
