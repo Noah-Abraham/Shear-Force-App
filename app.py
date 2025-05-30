@@ -33,10 +33,10 @@ bolts = []
 
 for i in range(num_bolts):
     st.markdown(f"**Bolt {i + 1}**")
-    x = st.number_input(f"X Position", key=f"x{i}")
-    y = st.number_input(f"Y Position", key=f"y{i}")
-    ks = st.number_input(f"Shear Stiffness (KS)", key=f"ks{i}", min_value=0.0)
-    ka = st.number_input(f"Axial Stiffness (KA)", key=f"ka{i}", min_value=0.0)
+    x = st.number_input(f"X Position", key=f"x{i}", format="%.6f")
+    y = st.number_input(f"Y Position", key=f"y{i}", format="%.6f")
+    ks = st.number_input(f"Shear Stiffness (KS)", key=f"ks{i}", min_value=0.0, format="%.6f")
+    ka = st.number_input(f"Axial Stiffness (KA)", key=f"ka{i}", min_value=0.0, format="%.6f")
     bolts.append(Bolt(x, y, ks, ka))
 
 # --- CALCULATION SECTION ---
