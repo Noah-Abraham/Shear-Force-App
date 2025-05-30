@@ -122,7 +122,7 @@ if bolts:
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    fig, ax = plt.subplots(figsize=(10, 8), dpi=200)
     ax.set_title(f"Bolt Force Vectors ({view_option})")
     ax.set_xlabel(view_option[0] + " Position")
     ax.set_ylabel(view_option[1] + " Position")
@@ -139,5 +139,17 @@ if bolts:
             ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
 
+        # Plot centroids
+    if view_option == "XY View":
+        ax.plot(XC, YC, 'bs', label='Shear Centroid')
+        ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
+    elif view_option == "XZ View":
+        ax.plot(XC, 0, 'bs', label='Shear Centroid')
+        ax.plot(XMC, 0, 'gs', label='Axial Centroid')
+    elif view_option == "YZ View":
+        ax.plot(YC, 0, 'bs', label='Shear Centroid')
+        ax.plot(YMC, 0, 'gs', label='Axial Centroid')
+
+    ax.legend()
     ax.set_aspect('equal', 'box')
     st.pyplot(fig)
