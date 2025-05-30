@@ -123,6 +123,23 @@ if bolts:
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
     fig, ax = plt.subplots(figsize=(10, 8), dpi=200)
+
+    # Auto scale graph to include vector length
+    all_x, all_y = [], []
+    for x, y, vx, vy, vz in shear_forces:
+        if view_option == "XY View":
+            all_x.extend([x, x + vx])
+            all_y.extend([y, y + vy])
+        elif view_option == "XZ View":
+            all_x.extend([x, x + vx])
+            all_y.extend([0, vz])
+        elif view_option == "YZ View":
+            all_x.extend([y, y + vy])
+            all_y.extend([0, vz])
+
+    margin = 0.1
+    ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
+    ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
     ax.set_title(f"Bolt Force Vectors ({view_option})")
     ax.set_xlabel(view_option[0] + " Position")
     ax.set_ylabel(view_option[1] + " Position")
