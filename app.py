@@ -127,7 +127,7 @@ if bolts:
     force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)]
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = (arrow_scale * bolt_span / max_force) if max_force > 0 else 1
+    normalized_arrow_scale = (normalized_arrow_scale * bolt_span / max_force) if max_force > 0 else 1
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
