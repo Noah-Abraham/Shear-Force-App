@@ -119,6 +119,7 @@ if bolts:
     st.write(f"Principal Moment IPY: {IPY:.6f}")
 
     view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
+arrow_scale = st.slider("Arrow Size (adjust for readability)", min_value=0.1, max_value=10.0, value=2.0, step=0.1)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -147,15 +148,15 @@ if bolts:
 
     for x, y, vx, vy, vz in shear_forces:
         if view_option == "XY View":
-            ax.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=10, color='blue')
+            ax.quiver(x, y, vx, vy, angles='xy', scale_units='xy', scale=arrow_scale, color='blue')
             ax.plot(x, y, 'ro')
             ax.text(x + 0.05, y + 0.05, f"({vx:.2f}, {vy:.2f})", fontsize=8)
         elif view_option == "XZ View":
-            ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=10, color='green')
+            ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=arrow_scale, color='green')
             ax.plot(x, 0, 'ro')
             ax.text(x + 0.05, vz + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
-            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=10, color='purple')
+            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=arrow_scale, color='purple')
             ax.plot(y, 0, 'ro')
             ax.text(y + 0.05, vz + 0.05, f"({vy:.2f}, {vz:.2f})", fontsize=8)
 
