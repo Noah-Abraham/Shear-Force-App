@@ -125,22 +125,34 @@ if bolts:
 
     fig, ax = plt.subplots(figsize=(10, 8), dpi=200)
 
-    # Auto scale graph to include vector length
-    all_x, all_y = [], []
+    # Calculate bounding box based on bolt layout and scaled vector length
+    vector_extent = []
     for x, y, vx, vy, vz in shear_forces:
         if view_option == "XY View":
-            all_x.extend([x, x + vx])
-            all_y.extend([y, y + vy])
+            vector_extent.append((x + vx * arrow_scale, y + vy * arrow_scale))
         elif view_option == "XZ View":
-            all_x.extend([x, x + vx])
-            all_y.extend([0, vz])
+            vector_extent.append((x + vx * arrow_scale, vz * arrow_scale))
         elif view_option == "YZ View":
-            all_x.extend([y, y + vy])
-            all_y.extend([0, vz])
+            vector_extent.append((y + vy * arrow_scale, vz * arrow_scale))
 
-    margin = 0.1
-    ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
-    ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
+    all_x = [b.x for b in bolts]
+    all_y = [b.y for b in bolts]
+
+    if view_option == "XY View":
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
+    elif view_option == "XZ View":
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
+    elif view_option == "YZ View":
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
+
+    x_margin = 0.1 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
+    y_margin = 0.1 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
+
+    ax.set_xlim(min(all_x) - x_margin, max(all_x) + x_margin)
+    ax.set_ylim(min(all_y) - y_margin, max(all_y) + y_margin)
     ax.set_title(f"Bolt Force Vectors ({view_option})")
     ax.set_xlabel(view_option[0] + " Position")
     ax.set_ylabel(view_option[1] + " Position")
