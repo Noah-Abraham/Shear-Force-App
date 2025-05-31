@@ -137,11 +137,11 @@ if bolts:
     vector_extent = []
     for x, y, vx, vy, vz in shear_forces:
         if view_option == "XY View":
-            vector_extent.append((x + vx * arrow_scale, y + vy * arrow_scale))
+            vector_extent.append((x + vx * normalized_arrow_scale, y + vy * normalized_arrow_scale))
         elif view_option == "XZ View":
-            vector_extent.append((x + vx * arrow_scale, vz * arrow_scale))
+            vector_extent.append((x + vx * normalized_arrow_scale, vz * normalized_arrow_scale))
         elif view_option == "YZ View":
-            vector_extent.append((y + vy * arrow_scale, vz * arrow_scale))
+            vector_extent.append((y + vy * normalized_arrow_scale, vz * normalized_arrow_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
