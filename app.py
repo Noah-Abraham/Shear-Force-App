@@ -176,7 +176,7 @@ if bolts:
             ax.plot(x, 0, 'ro')
             ax.text(x + 0.05, vz + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
-            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=arrow_scale, color='purple')
+            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=normalized_arrow_scale, color='purple')
             ax.plot(y, 0, 'ro')
             ax.text(y + 0.05, vz + 0.05, f"({vy:.2f}, {vz:.2f})", fontsize=8)
 
