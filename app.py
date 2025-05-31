@@ -119,7 +119,9 @@ if bolts:
     st.write(f"Principal Moment IPY: {IPY:.6f}")
 
     view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
-    arrow_scale = st.slider("Arrow Size (adjust for readability)", min_value=0.1, max_value=10.0, value=2.0, step=0.1)
+    # Fixed normalized arrow scale based on layout, without slider
+    layout_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
+    normalized_arrow_scale = 0.25 * layout_span  # Set arrow size relative to layout size
 
     # Normalize force vectors based on max force and layout span
     force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)]
@@ -157,8 +159,8 @@ if bolts:
     x_margin = 0.1 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
     y_margin = 0.1 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
 
-    ax.set_xlim(min(all_x) - x_margin, max(all_x) + x_margin)
-    ax.set_ylim(min(all_y) - y_margin, max(all_y) + y_margin)
+    ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
+    ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
     ax.set_title(f"Bolt Force Vectors ({view_option})")
     ax.set_xlabel(view_option[0] + " Position")
     ax.set_ylabel(view_option[1] + " Position")
@@ -170,7 +172,7 @@ if bolts:
             ax.plot(x, y, 'ro')
             ax.text(x + 0.05, y + 0.05, f"({vx:.2f}, {vy:.2f})", fontsize=8)
         elif view_option == "XZ View":
-            ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=arrow_scale, color='green')
+            ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=normalized_arrow_scale, color='green')
             ax.plot(x, 0, 'ro')
             ax.text(x + 0.05, vz + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
