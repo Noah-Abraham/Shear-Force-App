@@ -119,7 +119,7 @@ if bolts:
     st.write(f"Principal Moment IPY: {IPY:.6f}")
 
     view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
-arrow_scale = st.slider("Arrow Size (adjust for readability)", min_value=0.1, max_value=10.0, value=2.0, step=0.1)
+    arrow_scale = st.slider("Arrow Size (adjust for readability)", min_value=0.1, max_value=10.0, value=2.0, step=0.1)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
