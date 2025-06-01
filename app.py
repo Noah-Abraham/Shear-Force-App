@@ -127,7 +127,7 @@ if bolts:
     force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)]
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = (normalized_arrow_scale * bolt_span / max_force) if max_force > 0 else 1
+    normalized_arrow_scale = (arrow_scale * bolt_span / max_force) if max_force > 0 else 1
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -137,11 +137,11 @@ if bolts:
     vector_extent = []
     for x, y, vx, vy, vz in shear_forces:
         if view_option == "XY View":
-            vector_extent.append((x + vx * normalized_arrow_scale, y + vy * normalized_arrow_scale))
+            vector_extent.append((x + vx * arrow_scale, y + vy * arrow_scale))
         elif view_option == "XZ View":
-            vector_extent.append((x + vx * normalized_arrow_scale, vz * normalized_arrow_scale))
+            vector_extent.append((x + vx * arrow_scale, vz * arrow_scale))
         elif view_option == "YZ View":
-            vector_extent.append((y + vy * normalized_arrow_scale, vz * normalized_arrow_scale))
+            vector_extent.append((y + vy * arrow_scale, vz * arrow_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
@@ -176,7 +176,7 @@ if bolts:
             ax.plot(x, 0, 'ro')
             ax.text(x + 0.05, vz + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
-            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=normalized_arrow_scale, color='purple')
+            ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=arrow_scale, color='purple')
             ax.plot(y, 0, 'ro')
             ax.text(y + 0.05, vz + 0.05, f"({vy:.2f}, {vz:.2f})", fontsize=8)
 
