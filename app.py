@@ -139,9 +139,9 @@ if bolts:
         if view_option == "XY View":
             vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
         elif view_option == "XZ View":
-            vector_extent.append((x + vx * arrow_scale, vz / normalized_arrow_scale))
+            vector_extent.append((x + vx / normalized_arrow_scale, vz / normalized_arrow_scale))
         elif view_option == "YZ View":
-            vector_extent.append((y + vy * arrow_scale, vz * arrow_scale))
+            vector_extent.append((y + vy / normalized_arrow_scale, vz / normalized_arrow_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
@@ -174,11 +174,11 @@ if bolts:
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx, vz, angles='xy', scale_units='xy', scale=normalized_arrow_scale, color='green')
             ax.plot(x, 0, 'ro')
-            ax.text(x + 0.05, vz + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(x + 0.05, vz / normalized_arrow_scale + 0.05, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy, vz, angles='xy', scale_units='xy', scale=normalized_arrow_scale, color='purple')
             ax.plot(y, 0, 'ro')
-            ax.text(y + 0.05, vz + 0.05, f"({vy:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(y + 0.05, vz / normalized_arrow_scale + 0.05, f"({vy:.2f}, {vz:.2f})", fontsize=8)
 
         # Plot centroid positions and label arrows
     if view_option == "XY View":
