@@ -18,7 +18,7 @@ class Bolt:
 
 st.subheader("Load Cases")
 PX = st.number_input("External Force in X (PX) [kN]", value=0.0)
-PY = st.number_inp6ut("External Force in Y (PY) [kN]", value=0.0)
+PY = st.number_input("External Force in Y (PY) [kN]", value=0.0)
 PZ = st.number_input("Axial Force (PZ) [kN]", value=0.0)
 LX = st.number_input("X Coordinate of Load Application Point", value=0.0)
 LY = st.number_input("Y Coordinate of Load Application Point", value=0.0)
