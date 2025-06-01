@@ -128,7 +128,7 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (20 * normalized_arrow_scale)
+    vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -172,17 +172,17 @@ if bolts:
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
             ax.text(x + 0.05, y - 0.05, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(x + 0.05, y + 0.05, f"({vx:.2f}, {vy:.2f})", fontsize=8)
+            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, y + 0.05 + (vy * vector_display_scale) * 0.4, f"({vx:.2f}, {vy:.2f})", fontsize=8)
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             ax.text(x + 0.05, -0.1, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(x + 0.05, vz * vector_display_scale + 0.1, f"({vx:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vx:.2f}, {vz:.2f})", fontsize=8)
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             ax.text(y + 0.05, -0.1, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(y + 0.05, vz * vector_display_scale + 0.1, f"({vy:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(y + 0.05 + (vy * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vy:.2f}, {vz:.2f})", fontsize=8)
 
         # Plot centroid positions and label arrows
     if view_option == "XY View":
