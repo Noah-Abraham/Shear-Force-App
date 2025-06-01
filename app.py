@@ -171,18 +171,18 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            ax.text(x + 0.05, y - 0.05, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, y + 0.05 + (vy * vector_display_scale) * 0.4, f"({vx:.2f}, {vy:.2f})", fontsize=8)
+            ax.text(x - 0.05 - (vx * vector_display_scale) * 0.4, y - 0.05 - (vy * vector_display_scale) * 0.4, f"Bolt {i+1}", fontsize=7, color='black')
+            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, y + 0.05 + (vy * vector_display_scale) * 0.4, f"({vx:.2f} kN, {vy:.2f} kN)", fontsize=8)
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
-            ax.text(x + 0.05, -0.1, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vx:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(x - 0.05 - (vx * vector_display_scale) * 0.4, -0.1 - (vz * vector_display_scale) * 0.4, f"Bolt {i+1}", fontsize=7, color='black')
+            ax.text(x + 0.05 + (vx * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vx:.2f} kN, {vz:.2f} kN)", fontsize=8)
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
-            ax.text(y + 0.05, -0.1, f"Bolt {i+1}", fontsize=7, color='black')
-            ax.text(y + 0.05 + (vy * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vy:.2f}, {vz:.2f})", fontsize=8)
+            ax.text(y - 0.05 - (vy * vector_display_scale) * 0.4, -0.1 - (vz * vector_display_scale) * 0.4, f"Bolt {i+1}", fontsize=7, color='black')
+            ax.text(y + 0.05 + (vy * vector_display_scale) * 0.4, (vz * vector_display_scale) * 1.2, f"({vy:.2f} kN, {vz:.2f} kN)", fontsize=8)
 
         # Plot centroid positions and label arrows
     if view_option == "XY View":
