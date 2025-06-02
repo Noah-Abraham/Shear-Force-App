@@ -128,11 +128,11 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (20 * normalized_arrow_scale)
+    vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
-    fig, ax = plt.subplots(figsize=(10, 8), dpi=200)
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
 
     # Calculate bounding box based on bolt layout and scaled vector length
     vector_extent = []
@@ -157,8 +157,8 @@ if bolts:
         all_x += [pt[0] for pt in vector_extent]
         all_y += [pt[1] for pt in vector_extent]
 
-    x_margin = 0.1 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
-    y_margin = 0.1 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
+    x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
+    y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
 
     ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
     ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
