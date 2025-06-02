@@ -132,11 +132,24 @@ if bolts:
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
-    fig, ax = plt.subplots(figsize=(8, 6), dpi=150)
+    fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
     # Calculate bounding box based on bolt layout and scaled vector length
     vector_extent = []
+    from collections import defaultdict
+
+    bolt_positions = defaultdict(list)
     for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
+        if view_option == "XZ View":
+            key = (round(x, 3), round(vz * vector_display_scale, 3))
+        elif view_option == "YZ View":
+            key = (round(y, 3), round(vz * vector_display_scale, 3))
+        else:
+            key = (round(x, 3), round(y, 3))
+        bolt_positions[key].append(i + 1)
+
+    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
+        bolt_label = f"Bolt {i+1}"
         if view_option == "XY View":
             vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
         elif view_option == "XZ View":
@@ -171,17 +184,20 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            ax.text(x + (-1)**i * 0.2, y + (-1)**i * 0.2, f"Bolt {i+1}", fontsize=7, color='black', ha='right', va='top')
+            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(y, 3))])
+            ax.text(x + (-1)**i * 0.2, y + (-1)**i * 0.2, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
-            ax.text(x + (-1)**i * 0.2, vz * vector_display_scale + (-1)**i * 0.2, f"Bolt {i+1}", fontsize=7, color='black', ha='right', va='top')
+            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(vz * vector_display_scale, 3))])
+            ax.text(x + (-1)**i * 0.1, vz * vector_display_scale + (-1)**i * 0.1, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
-            ax.text(y + (-1)**i * 0.2, vz * vector_display_scale + (-1)**i * 0.2, f"Bolt {i+1}", fontsize=7, color='black', ha='right', va='top')
+            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(y, 3), round(vz * vector_display_scale, 3))])
+            ax.text(y + (-1)**i * 0.1, vz * vector_display_scale + (-1)**i * 0.1, label_text, fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
