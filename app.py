@@ -128,7 +128,7 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+    vector_display_scale = 1 / (20 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -171,20 +171,20 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            ax.text(x - 0.1, y - 0.1, f"Bolt" {i+1}
-({vx:} kN, {vy:} kN), fontsize=7, color='black', ha='right', va='top')
+            ax.text(x - 0.1, y - 0.1, f"Bolt {i+1}
+({vx:.1f} kN, {vy:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
-            ax.text(x - 0.1, -0.1, f"Bolt" {i+1}
-({vx:} kN, {vz:} kN), fontsize=7, color='black', ha='right', va='top')
+            ax.text(x - 0.1, -0.1, f"Bolt {i+1}
+({vx:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
-            ax.text(y - 0.1, -0.1, f"Bolt" {i+1}
-({vy:} kN, {vz:} kN), fontsize=7, color='black', ha='right', va='top')
+            ax.text(y - 0.1, -0.1, f"Bolt {i+1}
+({vy:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
