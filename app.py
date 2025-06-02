@@ -171,20 +171,17 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            ax.text(x - 0.1, y - 0.1, f"Bolt {i+1}
-({vx:.1f} kN, {vy:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
+            ax.text(x - 0.1, y - 0.1, f"Bolt {i+1} ({vx:.1f} kN, {vy:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
-            ax.text(x - 0.1, -0.1, f"Bolt {i+1}
-({vx:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
+            ax.text(x - 0.1, -0.1, f"Bolt {i+1} ({vx:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
-            ax.text(y - 0.1, -0.1, f"Bolt {i+1}
-({vy:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
+            ax.text(y - 0.1, -0.1, f"Bolt {i+1} ({vy:.1f} kN, {vz:.1f} kN)", fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
