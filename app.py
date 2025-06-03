@@ -95,7 +95,8 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT):
         vx = fx + ftx
         vy = fy + fty
         vz = PZ * b.ka / KAT if KAT else 0.0
-        forces.append((b.x, b.y, vx, vy, vz))
+        shear_mag = np.hypot(vx, vy)
+        forces.append((b.x, b.y, vx, vy, vz, shear_mag))
     return forces
 
 # --- DISPLAY RESULTS ---
@@ -121,14 +122,24 @@ if bolts:
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT)
 
-    total_axial_load = sum(abs(f[4]) for f in shear_forces)
-    total_shear_load = sum(np.hypot(f[2], f[3]) for f in shear_forces)
+    st.subheader("Bolt Load Summary")
+    for i, (x, y, vx, vy, vz, shear_mag) in enumerate(shear_forces):
+        st.write(f"Bolt {i+1}: Axial Load (VZ) = {vz:.3f} kN, Shear Load (√VX²+VY²) = {shear_mag:.3f} kN")
 
-    st.subheader("Total Load Summary")
-    st.write(f"Total Axial Bolt Load (Primary + Secondary): {total_axial_load:.3f} kN")
-    st.write(f"Total Shear Bolt Load (Primary + Secondary): {total_shear_load:.3f} kN")
-
-    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
+    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ", "Shear Magnitude"])
     force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
     st.subheader("Force Summary Table")
     st.dataframe(force_df.style.format("{:.3f}"))
+
+    # Visual display
+    st.subheader("Bolt Load Visualization")
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    for b, (_, _, vx, vy, vz, _) in zip(bolts, shear_forces):
+        ax.plot(b.x, b.y, 'ko')
+        ax.arrow(b.x, b.y, vx, vy, head_width=0.1, color='r', label='Shear')
+        ax.arrow(b.x, b.y, 0, vz, head_width=0.1, color='b', label='Axial')
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title("Bolt Shear and Axial Loads")
+    st.pyplot(fig)
