@@ -153,9 +153,9 @@ if bolts:
         if view_option == "XY View":
             vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
         elif view_option == "XZ View":
-            vector_extent.append((1, vz / normalized_arrow_scale))
+            vector_extent.append((0, vz / normalized_arrow_scale))
         elif view_option == "YZ View":
-            vector_extent.append((1, vz / normalized_arrow_scale))
+            vector_extent.append((0, vz / normalized_arrow_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
