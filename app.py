@@ -128,7 +128,7 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+    vector_display_scale = 1 / (20 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -185,19 +185,25 @@ if bolts:
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
             label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(y, 3))])
-            ax.text(x + (-1)**i * 0.2, y + (-1)**i * 0.2, label_text, fontsize=7, color='black', ha='right', va='top')
+            offset_x = -0.15 if vx >= 0 else 0.15
+            offset_y = -0.15 if vy >= 0 else 0.15
+            ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(vz * vector_display_scale, 3))])
-            ax.text(x + (-1)**i * 0.1, vz * vector_display_scale + (-1)**i * 0.1, label_text, fontsize=7, color='black', ha='right', va='top')
+            offset_x = -0.15 if vx >= 0 else 0.15
+            offset_z = -0.15 if vz >= 0 else 0.15
+            ax.text(x + offset_x, vz * vector_display_scale + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(y, 3), round(vz * vector_display_scale, 3))])
-            ax.text(y + (-1)**i * 0.1, vz * vector_display_scale + (-1)**i * 0.1, label_text, fontsize=7, color='black', ha='right', va='top')
+            offset_y = -0.15 if vy >= 0 else 0.15
+            offset_z = -0.15 if vz >= 0 else 0.15
+            ax.text(y + offset_y, vz * vector_display_scale + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
