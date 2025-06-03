@@ -63,8 +63,8 @@ for b in bolts:
     b.distance_from_centroid(XMC, YMC)
 
 def compute_reference_inertias(bolts):
-    IX = sum(b.ka * (b.dy**2) for b in bolts)
-    IY = sum(b.ka * (b.dx**2) for b in bolts)
+    IX = sum(b.ka * (b.dy**2 for b in bolts))
+    IY = sum(b.ka * (b.dx**2 for b in bolts))
     IXY = sum(b.ka * b.dx * b.dy for b in bolts)
     return IX, IY, IXY
 
@@ -108,8 +108,6 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK):
 # --- DISPLAY RESULTS ---
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
-    TK = sum(b.ks for b in bolts)
-    KAT = sum(b.ka for b in bolts)
     IX, IY, IXY = compute_reference_inertias(bolts, XMC, YMC)
     theta = compute_principal_axes(IX, IY, IXY)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
