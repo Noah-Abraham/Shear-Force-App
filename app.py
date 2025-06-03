@@ -60,8 +60,6 @@ def compute_centroids(bolts):
     return XC, YC, XMC, YMC
 
 
-for b in bolts:
-    b.distance_from_centroid(XMC, YMC)
 
 def compute_reference_inertias(bolts):
     IX = sum(b.ka * (b.dy**2 for b in bolts))
@@ -111,6 +109,8 @@ if bolts:
     XC, YC, XMC, YMC = compute_centroids(bolts)
     TK = sum(b.ks for b in bolts)
     KAT = sum(b.ka for b in bolts)
+    for b in bolts:
+        b.distance_from_centroid(XMC, YMC)
     IX, IY, IXY = compute_reference_inertias(bolts, XMC, YMC)
     theta = compute_principal_axes(IX, IY, IXY)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
