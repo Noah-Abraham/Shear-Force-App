@@ -55,7 +55,9 @@ def compute_centroids(bolts):
     YC = sum(b.y * b.ks for b in bolts) / total_shear_stiffness
     XMC = sum(b.x * b.ka for b in bolts) / total_axial_stiffness
     YMC = sum(b.y * b.ka for b in bolts) / total_axial_stiffness
-    return XC, YC, XMC, YMC
+    TK = sum(b.ks for b in bolts)
+    KAT = sum(b.ka for b in bolts)
+    return XC, YC, XMC, YMC, TK, KAT
 
 XC, YC, XMC, YMC = compute_centroids(bolts)
 
