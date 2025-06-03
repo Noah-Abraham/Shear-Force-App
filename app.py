@@ -14,9 +14,13 @@ class Bolt:
     def position(self):
         return np.array([self.x, self.y])
     
-    def set_distance_from_centroid(self, XMC, YMC):
+    def distance_from_centroid(self, XMC, YMC):
         self.dx = self.x - XMC
         self.dy = self.y - YMC
+
+    def prime_distance_from_centroid(self, theta):
+        self.ddx = np.sqrt(sum((self.x)**2, (self.y)**2))*np.sin((theta - np.arctan(self.x/self.y)))
+        self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
 
 # --- INPUT SECTION ---
 
@@ -47,22 +51,23 @@ for i in range(num_bolts):
 def compute_centroids(bolts):
     total_shear_stiffness = sum(b.ks for b in bolts)
     total_axial_stiffness = sum(b.ka for b in bolts)
-    x1 = sum(b.x * b.ks for b in bolts)
-    y1 = sum(b.y * b.ks for b in bolts)
-    xm1 = sum(b.x * b.ka for b in bolts)
-    ym1 = sum(b.y * b.ka for b in bolts)
-    XC = x1 / total_shear_stiffness if total_shear_stiffness else 0.0
-    YC = y1 / total_shear_stiffness if total_shear_stiffness else 0.0
-    XMC = xm1 / total_axial_stiffness if total_axial_stiffness else 0.0
-    YMC = ym1 / total_axial_stiffness if total_axial_stiffness else 0.0
-    return XC, YC, XMC, YMC, total_shear_stiffness, total_axial_stiffness
+    XC = sum(b.x * b.ks for b in bolts) / total_shear_stiffness
+    YC = sum(b.y * b.ks for b in bolts) / total_shear_stiffness
+    XMC = sum(b.x * b.ka for b in bolts) / total_axial_stiffness
+    YMC = sum(b.y * b.ka for b in bolts) / total_axial_stiffness
+    return XC, YC, XMC, YMC
+
+XC, YC, XMC, YMC = compute_centroids(bolts)
+
+for b in bolts:
+    b.distance_from_centroid(XMC, YMC)
 
 def compute_reference_inertias(bolts):
     IX = sum(b.ka * b.dx**2 for b in bolts)
     IY = sum(b.ka * b.dy**2 for b in bolts)
     IXY = sum(b.ka * b.dx * b.dy for b in bolts)
     return IX, IY, IXY
-    
+
 def compute_principal_axes(IX, IY, IXY):
     if abs(IXY) < 1e-4:
         theta = 0.0
