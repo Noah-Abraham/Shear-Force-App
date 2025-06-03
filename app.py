@@ -164,10 +164,8 @@ if bolts:
         all_x += [pt[0] for pt in vector_extent]
         all_y += [pt[1] for pt in vector_extent]
     elif view_option == "XZ View":
-        all_x += [pt[0] for pt in vector_extent]
         all_y += [pt[1] for pt in vector_extent]
     elif view_option == "YZ View":
-        all_x += [pt[0] for pt in vector_extent]
         all_y += [pt[1] for pt in vector_extent]
 
     x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
