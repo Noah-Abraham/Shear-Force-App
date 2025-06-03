@@ -190,7 +190,7 @@ if bolts:
             ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
-            ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
+            ax.quiver(x, 0, x, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             index = bolt_positions[(round(x, 3), 0)].index(i + 1)
             label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
@@ -201,7 +201,7 @@ if bolts:
             ax.text(x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
-            ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
+            ax.quiver(y, 0, y, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             index = bolt_positions[(round(y, 3), 0)].index(i + 1)
             label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
