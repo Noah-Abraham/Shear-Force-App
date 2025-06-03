@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
-st.title("Shear Force & Bolt Load Calculator")
+st.title("Shear Force & Axial Bolt Load Calculator")
 
 class Bolt:
     def __init__(self, x, y, ks, ka):
@@ -81,20 +81,22 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * xp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK):
+
+def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT):
     RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
+    total_ka = sum(b.ka for b in bolts)
     forces = []
     for b in bolts:
         rx = b.x - XC
         ry = YC - b.y
-        fx = PX * b.ks / TK if TK else 0.0
-        fy = PY * b.ks / TK if TK else 0.0
-        ftx = MZ * ry * b.ks / RS if RS else 0.0
-        fty = MZ * rx * b.ks / RS if RS else 0.0
+        fx = PX * b.ks / TK if TK else 0.0  # Primary shear X
+        fy = PY * b.ks / TK if TK else 0.0  # Primary shear Y
+        ftx = MZ * ry * b.ks / RS if RS else 0.0  # Secondary shear X
+        fty = MZ * rx * b.ks / RS if RS else 0.0  # Secondary shear Y
         vx = fx + ftx
         vy = fy + fty
-        vz = PZ * b.ka / sum(b.ka for b in bolts) if KAT else 0.0
-        forces.append((b.x, b.y, vx, vy, vz))
+        vz = PZ * b.ka / total_ka if total_ka else 0.0  # Axial
+        forces.append((b.x, b.y, vx, vy, vz, fx, fy, ftx, fty))  # Include all components
     return forces
 
 # --- DISPLAY RESULTS ---
@@ -130,7 +132,7 @@ if bolts:
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
+   shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT)
 
     fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
@@ -210,7 +212,13 @@ if bolts:
             offset_y = -0.25 if vy >= 0 else 0.25
             offset_z = -0.25 if vz >= 0 else 0.25
             ax.text(y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-            
+st.subheader("Total Bolt Loads")
+
+total_axial_load = sum(abs(vz) for *_, vz, *_ in shear_forces)
+total_shear_load = sum(np.hypot(vx, vy) for *_, vx, vy, _, *_ in shear_forces)
+
+st.write(f"**Total Axial Load (∑|VZ|):** {total_axial_load:.3f} kN")
+st.write(f"**Total Shear Load (∑√(VX² + VY²)):** {total_shear_load:.3f} kN")
 
         # Plot centroid positions and label arrows
     if view_option == "XY View": 
