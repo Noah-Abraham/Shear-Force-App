@@ -63,8 +63,8 @@ for b in bolts:
     b.distance_from_centroid(XMC, YMC)
 
 def compute_reference_inertias(bolts):
-    IX = sum(b.ka * b.dx**2 for b in bolts)
-    IY = sum(b.ka * b.dy**2 for b in bolts)
+    IX = sum(b.ka * b.dy**2 for b in bolts)
+    IY = sum(b.ka * b.dx**2 for b in bolts)
     IXY = sum(b.ka * b.dx * b.dy for b in bolts)
     return IX, IY, IXY
 
