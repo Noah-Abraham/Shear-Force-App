@@ -141,9 +141,9 @@ if bolts:
     bolt_positions = defaultdict(list)
     for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
         if view_option == "XZ View":
-            key = (round(x, 3), round(vz * vector_display_scale, 3))
+            key = (round(x, 3), 0)
         elif view_option == "YZ View":
-            key = (round(y, 3), round(vz * vector_display_scale, 3))
+            key = (round(y, 3), 0)
         else:
             key = (round(x, 3), round(y, 3))
         bolt_positions[key].append(i + 1)
