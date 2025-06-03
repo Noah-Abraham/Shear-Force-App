@@ -184,7 +184,7 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            label_text = f"Bolt {i+1}"
+            label_text = "{i+1}"
             offset_x = -0.25 if vx >= 0 else 0.25
             offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
             ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
