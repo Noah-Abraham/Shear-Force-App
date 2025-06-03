@@ -128,7 +128,7 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+    vector_display_scale = 1 / (20 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -153,9 +153,9 @@ if bolts:
         if view_option == "XY View":
             vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
         elif view_option == "XZ View":
-            vector_extent.append((0, vz / normalized_arrow_scale))
+            vector_extent.append((x + vx / normalized_arrow_scale, vz / normalized_arrow_scale))
         elif view_option == "YZ View":
-            vector_extent.append((0, vz / normalized_arrow_scale))
+            vector_extent.append((y + vy / normalized_arrow_scale, vz / normalized_arrow_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
@@ -190,7 +190,7 @@ if bolts:
             ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "XZ View":
-            ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
+            ax.quiver(x, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             index = bolt_positions[(round(x, 3), 0)].index(i + 1)
             label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
@@ -201,7 +201,7 @@ if bolts:
             ax.text(x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
-            ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
+            ax.quiver(y, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             index = bolt_positions[(round(y, 3), 0)].index(i + 1)
             label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
