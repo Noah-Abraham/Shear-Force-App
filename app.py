@@ -61,7 +61,7 @@ def compute_centroids(bolts):
 
 
 for b in bolts:
-    b.distance_from_centroid(XMC, YMC)
+    distance_from_centroid(XMC, YMC)
 
 def compute_reference_inertias(bolts):
     IX = sum(b.ka * (b.dy**2 for b in bolts))
