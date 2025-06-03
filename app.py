@@ -49,22 +49,21 @@ for i in range(num_bolts):
 
 # --- CALCULATION SECTION ---
 def compute_centroids(bolts):
-    total_shear_stiffness = sum(b.ks for b in bolts)
-    total_axial_stiffness = sum(b.ka for b in bolts)
-    XC = sum(b.x * b.ks for b in bolts) / total_shear_stiffness
-    YC = sum(b.y * b.ks for b in bolts) / total_shear_stiffness
-    XMC = sum(b.x * b.ka for b in bolts) / total_axial_stiffness
-    YMC = sum(b.y * b.ka for b in bolts) / total_axial_stiffness
-    return XC, YC, XMC, YMC
-
-XC, YC, XMC, YMC = compute_centroids(bolts)
-
-for b in bolts:
-    b.distance_from_centroid(XMC, YMC)
+    TK = sum(b.ks for b in bolts)
+    KAT = sum(b.ka for b in bolts)
+    x1 = sum(b.x * b.ks for b in bolts)
+    y1 = sum(b.y * b.ks for b in bolts)
+    xm1 = sum(b.x * b.ka for b in bolts)
+    ym1 = sum(b.y * b.ka for b in bolts)
+    XC = x1 / TK if TK else 0.0
+    YC = y1 / TK if TK else 0.0
+    XMC = xm1 / KAT if KAT else 0.0
+    YMC = ym1 / KAT if KAT else 0.0
+    return XC, YC, XMC, YMC, TK, KAT
 
 def compute_reference_inertias(bolts):
-    IX = sum(b.ka * b.dy**2 for b in bolts)
-    IY = sum(b.ka * b.dx**2 for b in bolts)
+    IX = sum(b.ka * b.dx**2 for b in bolts)
+    IY = sum(b.ka * b.dy**2 for b in bolts)
     IXY = sum(b.ka * b.dx * b.dy for b in bolts)
     return IX, IY, IXY
 
