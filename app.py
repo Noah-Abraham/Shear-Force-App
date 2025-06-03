@@ -13,6 +13,10 @@ class Bolt:
 
     def position(self):
         return np.array([self.x, self.y])
+    
+    def set_distance_from_centroid(self, XMC, YMC):
+        self.dx = self.x - XMC
+        self.dy = self.y - YMC
 
 # --- INPUT SECTION ---
 
@@ -53,10 +57,10 @@ def compute_centroids(bolts):
     YMC = ym1 / total_axial_stiffness if total_axial_stiffness else 0.0
     return XC, YC, XMC, YMC, total_shear_stiffness, total_axial_stiffness
 
-def compute_reference_inertias(bolts, XMC, YMC):
-    IX = sum(b.ka * (b.y - YMC)**2 for b in bolts)
-    IY = sum(b.ka * (b.x - XMC)**2 for b in bolts)
-    IXY = sum(b.ka * (b.x - XMC) * (b.y - YMC) for b in bolts)
+def compute_reference_inertias(bolts):
+    IX = sum(b.ka * bolts.dx**2 for b in bolts)
+    IY = sum(b.ka * bolts.dy**2 for b in bolts)
+    IXY = sum(b.ka * bolts.dx * bolts.dy for b in bolts)
     return IX, IY, IXY
 
 def compute_principal_axes(IX, IY, IXY):
@@ -96,6 +100,7 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK):
         vz = PZ * b.ka / sum(b.ka for b in bolts) if KAT else 0.0
         forces.append((b.x, b.y, vx, vy, vz))
     return forces
+
 
 # --- DISPLAY RESULTS ---
 if bolts:
