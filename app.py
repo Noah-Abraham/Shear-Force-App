@@ -184,7 +184,7 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(y, 3))])
+            label_text = f"Bolt {i+1}"
             offset_x = -0.25 if vx >= 0 else 0.25
             offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
             ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
@@ -193,16 +193,16 @@ if bolts:
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), round(vz * vector_display_scale, 3))])
-            offset_x = -0.15 if vx >= 0 else 0.15
-            offset_z = -0.25 if vz >= 0 else 0.25  # XZ View uses vx and vz
+            offset_x = -0.25 if vx >= 0 else 0.25
+            offset_z = -0.25 if vz >= 0 else 0.25
             ax.text(x + offset_x, vz * vector_display_scale + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
         elif view_option == "YZ View":
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(y, 3), round(vz * vector_display_scale, 3))])
-            offset_y = -0.15 if vy >= 0 else 0.15
-            offset_z = -0.25 if vz >= 0 else 0.25  # YZ View uses vy and vz
+            offset_y = -0.25 if vy >= 0 else 0.25
+            offset_z = -0.25 if vz >= 0 else 0.25
             ax.text(y + offset_y, vz * vector_display_scale + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
 
