@@ -128,7 +128,7 @@ if bolts:
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+    vector_display_scale = 1 / (20 * normalized_arrow_scale)
 
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
 
@@ -184,7 +184,7 @@ if bolts:
         if view_option == "XY View":
             ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
             ax.plot(x, y, 'ro')
-            label_text = "{i+1}"
+            label_text = f"Bolt {i+1}"
             offset_x = -0.25 if vx >= 0 else 0.25
             offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
             ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
@@ -193,7 +193,7 @@ if bolts:
             ax.quiver(x, 0, vx * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
             ax.plot(x, 0, 'ro')
             index = bolt_positions[(round(x, 3), 0)].index(i + 1)
-            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(x, 3), 0)])
+            label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
             offset_x = -0.25 if vx >= 0 else 0.25
             offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
             offset_x = -0.25 if vx >= 0 else 0.25
@@ -204,7 +204,7 @@ if bolts:
             ax.quiver(y, 0, vy * vector_display_scale, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
             ax.plot(y, 0, 'ro')
             index = bolt_positions[(round(y, 3), 0)].index(i + 1)
-            label_text = ' & '.join(f"Bolt {j}" for j in bolt_positions[(round(y, 3), 0)])
+            label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
             offset_y = -0.25 if vy >= 0 else 0.25
             offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
             offset_y = -0.25 if vy >= 0 else 0.25
@@ -213,6 +213,11 @@ if bolts:
             
 
         # Plot centroid positions and label arrows
+    ax.plot(LX, LY if view_option == "XY View" else 0, 'kx', label='Load Point')
+    if view_option == "YZ View":
+        ax.plot(LY, 0, 'kx', label='Load Point')
+    elif view_option == "XZ View":
+        ax.plot(LX, 0, 'kx', label='Load Point')
     if view_option == "XY View":
         ax.plot(XC, YC, 'bs', label='Shear Centroid')
         ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
