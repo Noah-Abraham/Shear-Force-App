@@ -215,9 +215,9 @@ if bolts:
         # Plot centroid positions and label arrows
     ax.plot(LX, LY if view_option == "XY View" else 0, 'kx', label='Load Point')
     if view_option == "YZ View":
-        ax.plot(LY, 0, 'kx', label='Load Point')
+        ax.plot(LY, LZ, 'kx', label='Load Point')
     elif view_option == "XZ View":
-        ax.plot(LX, 0, 'kx', label='Load Point')
+        ax.plot(LX, LZ, 'kx', label='Load Point')
     if view_option == "XY View":
         ax.plot(XC, YC, 'bs', label='Shear Centroid')
         ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
