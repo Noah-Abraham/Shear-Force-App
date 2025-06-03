@@ -76,11 +76,9 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
     theta_rad = np.radians(theta)
     IPX = 0.0
     IPY = 0.0
-    for b in bolts:
-        dx = b.x - XMC
-        dy = b.y - YMC
-        xp = dx * np.cos(theta_rad) + dy * np.sin(theta_rad)
-        yp = -dx * np.sin(theta_rad) + dy * np.cos(theta_rad)
+    for b in bolts:  
+        xp = b.dx * np.cos(theta_rad) + b.dy * np.sin(theta_rad)
+        yp = -b.dx * np.sin(theta_rad) + b.dy * np.cos(theta_rad)
         IPX += b.ka * yp**2
         IPY += b.ka * xp**2
     return IPX, IPY
