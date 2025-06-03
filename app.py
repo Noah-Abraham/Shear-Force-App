@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 st.title("Shear Force & Axial Bolt Load Calculator")
 
@@ -81,22 +82,20 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * xp**2
     return IPX, IPY
 
-
 def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT):
     RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
-    total_ka = sum(b.ka for b in bolts)
     forces = []
     for b in bolts:
         rx = b.x - XC
         ry = YC - b.y
-        fx = PX * b.ks / TK if TK else 0.0  # Primary shear X
-        fy = PY * b.ks / TK if TK else 0.0  # Primary shear Y
-        ftx = MZ * ry * b.ks / RS if RS else 0.0  # Secondary shear X
-        fty = MZ * rx * b.ks / RS if RS else 0.0  # Secondary shear Y
+        fx = PX * b.ks / TK if TK else 0.0
+        fy = PY * b.ks / TK if TK else 0.0
+        ftx = MZ * ry * b.ks / RS if RS else 0.0
+        fty = MZ * rx * b.ks / RS if RS else 0.0
         vx = fx + ftx
         vy = fy + fty
-        vz = PZ * b.ka / total_ka if total_ka else 0.0  # Axial
-        forces.append((b.x, b.y, vx, vy, vz, fx, fy, ftx, fty))  # Include all components
+        vz = PZ * b.ka / KAT if KAT else 0.0
+        forces.append((b.x, b.y, vx, vy, vz))
     return forces
 
 # --- DISPLAY RESULTS ---
@@ -120,129 +119,15 @@ if bolts:
     st.write(f"Principal Moment IPX: {IPX:.6f}")
     st.write(f"Principal Moment IPY: {IPY:.6f}")
 
-    view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
-    # Fixed normalized arrow scale based on layout, without slider
-    layout_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = 0.25 * layout_span  # Set arrow size relative to layout size
+    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT)
 
-    # Normalize force vectors based on max force and layout span
-    force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)]
-    max_force = max(force_mags) if force_mags else 1
-    bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+    total_axial_load = sum(abs(f[4]) for f in shear_forces)
+    total_shear_load = sum(np.hypot(f[2], f[3]) for f in shear_forces)
 
-   shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ, KAT)
+    st.subheader("Total Load Summary")
+    st.write(f"Total Axial Bolt Load (Primary + Secondary): {total_axial_load:.3f} kN")
+    st.write(f"Total Shear Bolt Load (Primary + Secondary): {total_shear_load:.3f} kN")
 
-    fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
-
-    # Calculate bounding box based on bolt layout and scaled vector length
-    vector_extent = []
-    from collections import defaultdict
-
-    bolt_positions = defaultdict(list)
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XZ View":
-            key = (round(x, 3), 0)
-        elif view_option == "YZ View":
-            key = (round(y, 3), 0)
-        else:
-            key = (round(x, 3), round(y, 3))
-        bolt_positions[key].append(i + 1)
-
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        bolt_label = f"Bolt {i+1}"
-        if view_option == "XY View":
-            vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
-        elif view_option == "XZ View":
-            vector_extent.append((x, vz / normalized_arrow_scale))
-        elif view_option == "YZ View":
-            vector_extent.append((y, vz / normalized_arrow_scale))
-
-    all_x = [b.x for b in bolts]
-    all_y = [b.y for b in bolts]
-
-    if view_option == "XY View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "XZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "YZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-
-    x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
-    y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
-
-    ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
-    ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
-    ax.set_title(f"Bolt Force Vectors ({view_option})")
-    ax.set_xlabel(view_option[0] + " Position")
-    ax.set_ylabel(view_option[1] + " Position")
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XY View":
-            ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
-            ax.plot(x, y, 'ro')
-            label_text = f"Bolt {i+1}"
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
-            ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "XZ View":
-            ax.quiver(x, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
-            ax.plot(x, 0, 'ro')
-            index = bolt_positions[(round(x, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "YZ View":
-            ax.quiver(y, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
-            ax.plot(y, 0, 'ro')
-            index = bolt_positions[(round(y, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-st.subheader("Total Bolt Loads")
-
-total_axial_load = sum(abs(vz) for *_, vz, *_ in shear_forces)
-total_shear_load = sum(np.hypot(vx, vy) for *_, vx, vy, _, *_ in shear_forces)
-
-st.write(f"**Total Axial Load (∑|VZ|):** {total_axial_load:.3f} kN")
-st.write(f"**Total Shear Load (∑√(VX² + VY²)):** {total_shear_load:.3f} kN")
-
-        # Plot centroid positions and label arrows
-    if view_option == "XY View": 
-        ax.plot(LX, LY, 'kx', label='Load Point')
-    elif view_option == "YZ View":
-        ax.plot(LY, LZ, 'kx', label='Load Point')
-    elif view_option == "XZ View":
-        ax.plot(LX, LZ, 'kx', label='Load Point')
-    if view_option == "XY View":
-        ax.plot(XC, YC, 'bs', label='Shear Centroid')
-        ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
-    elif view_option == "XZ View":
-        ax.plot(XC, 0, 'bs', label='Shear Centroid')
-        ax.plot(XMC, 0, 'gs', label='Axial Centroid')
-    elif view_option == "YZ View":
-        ax.plot(YC, 0, 'bs', label='Shear Centroid')
-        ax.plot(YMC, 0, 'gs', label='Axial Centroid')
-
-    ax.legend()
-    ax.set_aspect('equal', 'box')
-    st.pyplot(fig)
-
-    # Optional: show a force summary table
-    import pandas as pd
     force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
     force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
     st.subheader("Force Summary Table")
