@@ -21,6 +21,29 @@ class Bolt:
     def prime_distance_from_centroid(self, theta):
         self.ddx = np.sqrt(sum((self.x)**2, (self.y)**2))*np.sin((theta - np.arctan(self.x/self.y)))
         self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
+    
+    def debug_IX_calculation(bolts, YC, stiffness_attr='ks'):
+    """
+    Prints detailed debug info for IX calculation.
+
+    bolts: list of bolt objects or dicts
+    YC: centroid y-coordinate (float)
+    stiffness_attr: attribute name for stiffness to use (e.g. 'ks' or 'ka')
+    """
+    print(f"{'Bolt':>4} | {'y_i':>8} | {stiffness_attr:>8} | {'y_i - YC':>10} | {'(y_i - YC)^2':>15} | {'k_i*(y_i - YC)^2':>18}")
+    print("-" * 70)
+    IX = 0.0
+    for i, b in enumerate(bolts, start=1):
+        y_i = getattr(b, 'y')
+        k_i = getattr(b, stiffness_attr)
+        diff = y_i - YC
+        diff_sq = diff ** 2
+        weighted = k_i * diff_sq
+        IX += weighted
+        print(f"{i:4d} | {y_i:8.4f} | {k_i:8.4f} | {diff:10.4f} | {diff_sq:15.6f} | {weighted:18.6f}")
+    print("-" * 70)
+    print(f"Calculated I_X = {IX:.6f}\n")
+    return IX
 
 # --- INPUT SECTION ---
 
@@ -117,6 +140,9 @@ if bolts:
     theta = compute_principal_axes(IX, IY, IXY)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
+    XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
+    IX = debug_IX_calculation(bolts, YC, stiffness_attr='ks')
+    
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
     st.write(f"Axial Centroid (XMC, YMC): ({XMC:.6f}, {YMC:.6f})")
