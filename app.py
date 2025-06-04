@@ -25,6 +25,8 @@ class Bolt:
 
     def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
         VZ = PZ / num_bolts
+        self.ttblx = 0.0
+        self.ttbly = 0.0
         self.tblx = POMX * self.ddx/IPX
         self.tbly = POMY * self.ddy/IPY
         self.ttbl = self.ttblx + self.ttbly + VZ
