@@ -278,16 +278,25 @@ if bolts:
 
     # Optional: show a force summary table
     import pandas as pd
-    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
-    force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
+
     st.subheader("Force Summary Table")
+
+    force_df = pd.DataFrame({
+        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
+        "X": [b.x for b in bolts],
+        "Y": [b.y for b in bolts],
+        "Total Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
+        "Total Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
+    })
+    force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
     st.dataframe(force_df.style.format("{:.3f}"))
+
     st.subheader("Detailed Bolt Load Breakdown")
 
     debug_df = pd.DataFrame({
         "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-        "X": [b.x for b in bolts],
-        "Y": [b.y for b in bolts],
+        "x": [b.x for b in bolts],
+        "y": [b.y for b in bolts],
         "dx": [b.dx for b in bolts],
         "dy": [b.dy for b in bolts],
         "ddx": [getattr(b, 'ddx', 0.0) for b in bolts],
@@ -300,5 +309,5 @@ if bolts:
         "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
     })
 
-    st.dataframe(debug_df.style.format("{:.4f}"))
+st.dataframe(debug_df.style.format("{:.4f}"))
 
