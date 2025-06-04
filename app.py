@@ -24,12 +24,12 @@ class Bolt:
         self.ddy = np.hypot((self.dx), (self.dy))*np.cos((theta_rad - np.arctan2(self.dx, self.dy)))
 
     def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
-        VZ = PZ / num_bolts
+        VZ = PZ / num_bolts  # Uniform axial load
         self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
         self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
         self.ttblx = self.tblx
         self.ttbly = self.tbly
-        self.ttbl = self.ttblx + self.ttbly + VZ
+        self.ttbl = self.tblx + self.tbly + VZ
 
     def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
         T = PY * (LX - XMC) - PX * (LY - YMC)
