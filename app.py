@@ -26,17 +26,17 @@ class Bolt:
         print(f"{'Bolt':>4} | {'y_i':>8} | {stiffness_attr:>8} | {'y_i - YC':>10} | {'(y_i - YC)^2':>15} | {'k_i*(y_i - YC)^2':>18}")
         print("-" * 70)
         IX = 0.0
-    for i, b in enumerate(bolts, start=1):
-        y_i = getattr(b, 'y')
-        k_i = getattr(b, stiffness_attr)
-        diff = y_i - YC
-        diff_sq = diff ** 2
-        weighted = k_i * diff_sq
-        IX += weighted
+        for i, b in enumerate(bolts, start=1):
+            y_i = getattr(b, 'y')
+            k_i = getattr(b, stiffness_attr)
+            diff = y_i - YC
+            diff_sq = diff ** 2
+            weighted = k_i * diff_sq
+            IX += weighted
         print(f"{i:4d} | {y_i:8.4f} | {k_i:8.4f} | {diff:10.4f} | {diff_sq:15.6f} | {weighted:18.6f}")
-    print("-" * 70)
-    print(f"Calculated I_X = {IX:.6f}\n")
-    return IX
+        print("-" * 70)
+        print(f"Calculated I_X = {IX:.6f}\n")
+        return IX
 
 # --- INPUT SECTION ---
 
