@@ -1,16 +1,15 @@
+import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-# --- Define the Bolt class ---
+# --- Bolt class same as before ---
 class Bolt:
     def __init__(self, x, y, ks=1.0, ka=1.0):
-        self.x = x  # position x
-        self.y = y  # position y
-        self.ks = ks  # shear stiffness (not used here but placeholder)
-        self.ka = ka  # axial stiffness (not used here but placeholder)
-        
-        # Variables to store results
+        self.x = x
+        self.y = y
+        self.ks = ks
+        self.ka = ka
         self.dx = 0.0
         self.dy = 0.0
         self.ddx = 0.0
@@ -49,7 +48,7 @@ class Bolt:
             self.bsly = T * self.dy / IT
             self.tbsl = np.hypot(self.bslx, self.bsly)
 
-# --- Helper functions ---
+# Helper functions (same as before)
 def compute_centroid(bolts):
     XMC = np.mean([b.x for b in bolts])
     YMC = np.mean([b.y for b in bolts])
@@ -70,13 +69,11 @@ def compute_principal_axes(IX, IY, IXY):
     return theta
 
 def compute_principal_moments(bolts, XMC, YMC, theta):
-    # Rotate coordinates by theta to principal axes
     IPX = 0.0
     IPY = 0.0
     for b in bolts:
         dx = b.x - XMC
         dy = b.y - YMC
-        # Rotate
         dxp = dx * np.cos(np.radians(theta)) + dy * np.sin(np.radians(theta))
         dyp = -dx * np.sin(np.radians(theta)) + dy * np.cos(np.radians(theta))
         IPX += dxp**2
@@ -84,7 +81,6 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
     return IPX, IPY
 
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
-    # Moments about centroid due to loads at point (LX, LY, LZ)
     OMX = PY * (LZ - 0) - PZ * (LY - YMC)
     OMY = PZ * (LX - XMC) - PX * (LZ - 0)
     return OMX, OMY
@@ -94,85 +90,74 @@ def resolved_moments(OMX, OMY, theta):
     POMY = -OMX * np.sin(np.radians(theta)) + OMY * np.cos(np.radians(theta))
     return POMX, POMY
 
-# --- Main program ---
+# Main function to run calculations and display in Streamlit
+def main():
+    st.title("Bolt Load Visualization and Table")
 
-# Example bolt positions (x,y)
-bolt_coords = [(0.5, 1.0), (1.5, 1.0), (1.5, 0.0), (0.5, 0.0)]
-bolts = [Bolt(x, y) for x, y in bolt_coords]
+    # Example bolt coordinates
+    bolt_coords = [(0.5, 1.0), (1.5, 1.0), (1.5, 0.0), (0.5, 0.0)]
+    bolts = [Bolt(x, y) for x, y in bolt_coords]
 
-# External applied forces and load application point
-PX, PY, PZ = 1000, 500, 300  # Forces in Newtons
-LX, LY, LZ = 1.0, 0.5, 0.0  # Load application coordinates
+    # Input external forces and load application point (user input)
+    PX = st.number_input("Force PX (N)", value=1000.0)
+    PY = st.number_input("Force PY (N)", value=500.0)
+    PZ = st.number_input("Force PZ (N)", value=300.0)
+    LX = st.number_input("Load point LX (m)", value=1.0)
+    LY = st.number_input("Load point LY (m)", value=0.5)
+    LZ = st.number_input("Load point LZ (m)", value=0.0)
 
-num_bolts = len(bolts)
+    num_bolts = len(bolts)
 
-# Calculate centroid
-XMC, YMC = compute_centroid(bolts)
+    # Calculations
+    XMC, YMC = compute_centroid(bolts)
+    for b in bolts:
+        b.distance_from_centroid(XMC, YMC)
 
-# Calculate bolt distances from centroid
-for b in bolts:
-    b.distance_from_centroid(XMC, YMC)
+    IX, IY, IXY = compute_reference_inertias(bolts, XMC, YMC)
+    theta = compute_principal_axes(IX, IY, IXY)
+    IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
+    OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
+    POMX, POMY = resolved_moments(OMX, OMY, theta)
+    IT = sum(b.dx**2 + b.dy**2 for b in bolts)
 
-# Calculate reference moments of inertia
-IX, IY, IXY = compute_reference_inertias(bolts, XMC, YMC)
+    for b in bolts:
+        b.prime_distance_from_centroid(theta)
+        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
+        b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
 
-# Calculate principal axis angle
-theta = compute_principal_axes(IX, IY, IXY)
+    # Prepare DataFrame for display
+    force_data = {
+        "X (m)": [b.x for b in bolts],
+        "Y (m)": [b.y for b in bolts],
+        "Total Tensile Load (N)": [b.ttbl for b in bolts],
+        "Total Shear Load (N)": [b.tbsl for b in bolts],
+    }
+    force_df = pd.DataFrame(force_data, index=[f"Bolt {i+1}" for i in range(num_bolts)])
 
-# Calculate principal moments of inertia
-IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
+    st.subheader("Bolt Load Table")
+    st.dataframe(force_df.style.format("{:.2f}"))
 
-# Calculate moments about centroid
-OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
+    # Plotting
+    fig, ax = plt.subplots(figsize=(7, 6))
+    ax.plot([b.x for b in bolts], [b.y for b in bolts], 'ro', label='Bolts')
 
-# Resolve moments in principal axes
-POMX, POMY = resolved_moments(OMX, OMY, theta)
+    vector_scale = 0.1
+    for b in bolts:
+        if b.tbsl > 0:
+            vx = b.bslx / b.tbsl
+            vy = b.bsly / b.tbsl
+            ax.arrow(b.x, b.y, vx * b.tbsl * vector_scale, vy * b.tbsl * vector_scale,
+                     head_width=0.04, head_length=0.08, fc='blue', ec='blue')
+        ax.text(b.x, b.y + 0.1, f"TTBL: {b.ttbl:.1f} N", color='red', fontsize=8, ha='center')
 
-# Compute IT for secondary shear calculation
-IT = sum(b.dx**2 + b.dy**2 for b in bolts)
+    ax.set_xlabel('X Position (m)')
+    ax.set_ylabel('Y Position (m)')
+    ax.set_title('Bolt Loads: Shear Vectors (Blue) & Tensile Load (Red text)')
+    ax.grid(True)
+    ax.legend()
+    ax.axis('equal')
 
-# Calculate loads on each bolt
-for b in bolts:
-    b.prime_distance_from_centroid(theta)
-    b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
-    b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
+    st.pyplot(fig)
 
-# --- Prepare DataFrame for display ---
-force_data = {
-    "X": [b.x for b in bolts],
-    "Y": [b.y for b in bolts],
-    "Total Tensile Load (ttbl)": [b.ttbl for b in bolts],
-    "Total Shear Load (tbsl)": [b.tbsl for b in bolts],
-}
-force_df = pd.DataFrame(force_data, index=[f"Bolt {i+1}" for i in range(num_bolts)])
-
-print(force_df.round(2))
-
-# --- Plotting ---
-fig, ax = plt.subplots(figsize=(8, 6))
-
-# Plot bolts
-ax.plot([b.x for b in bolts], [b.y for b in bolts], 'ro', label='Bolts')
-
-# Plot shear load vectors as arrows
-vector_scale = 0.1  # Scale factor for arrows length
-for b in bolts:
-    if b.tbsl > 0:
-        # Normalize shear vector direction
-        vx = b.bslx / b.tbsl
-        vy = b.bsly / b.tbsl
-        # Scale vector by shear load magnitude for visibility
-        ax.arrow(b.x, b.y, vx * b.tbsl * vector_scale, vy * b.tbsl * vector_scale,
-                 head_width=0.05, head_length=0.1, fc='blue', ec='blue')
-
-    # Annotate tensile load next to each bolt
-    ax.text(b.x, b.y + 0.1, f"TTBL: {b.ttbl:.1f} N", color='red', fontsize=8, ha='center')
-
-# Labels and grid
-ax.set_xlabel('X Position')
-ax.set_ylabel('Y Position')
-ax.set_title('Bolt Loads: Shear Vectors (Blue) & Tensile Load (Red text)')
-ax.grid(True)
-ax.legend()
-plt.axis('equal')
-plt.show()
+if __name__ == "__main__":
+    main()
