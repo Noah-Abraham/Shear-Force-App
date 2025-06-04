@@ -23,13 +23,6 @@ class Bolt:
         self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
     
     def debug_IX_calculation(bolts, YC, stiffness_attr='ks'):
-    """
-    Prints detailed debug info for IX calculation.
-
-    bolts: list of bolt objects or dicts
-    YC: centroid y-coordinate (float)
-    stiffness_attr: attribute name for stiffness to use (e.g. 'ks' or 'ka')
-    """
         print(f"{'Bolt':>4} | {'y_i':>8} | {stiffness_attr:>8} | {'y_i - YC':>10} | {'(y_i - YC)^2':>15} | {'k_i*(y_i - YC)^2':>18}")
         print("-" * 70)
         IX = 0.0
