@@ -19,8 +19,9 @@ class Bolt:
         self.dy = self.y - YMC
 
     def prime_distance_from_centroid(self, theta):
-        self.ddx = np.hypot((self.x), (self.y))*np.sin((theta - np.arctan2(self.x, self.y)))
-        self.ddy = np.hypot((self.x), (self.y))*np.cos((theta - np.arctan2(self.x, self.y)))
+        theta_rad = np.radians(theta)
+        self.ddx = np.hypot((self.dx), (self.dy))*np.sin((theta_rad - np.arctan2(self.dx, self.dy)))
+        self.ddy = np.hypot((self.dx), (self.dy))*np.cos((theta_rad - np.arctan2(self.dx, self.dy)))
 
     def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
         VZ = PZ / num_bolts
