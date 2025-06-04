@@ -142,7 +142,7 @@ if bolts:
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK)
+    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
 
     fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
