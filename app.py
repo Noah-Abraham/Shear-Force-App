@@ -298,4 +298,5 @@ if bolts:
         "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
     })
 
-    st.dataframe(debug_df.style.format("{:.4f}"))
+    numeric_cols = ["X", "Y", "dx", "dy", "ddx", "ddy", "tblx (Mx')", "tbly (My')", "ttbl (Total Tension)", "bslx (Sec. Shear X)", "bsly (Sec. Shear Y)", "tbsl (Total Shear)"]
+st.dataframe(debug_df.style.format({col: "{:.4f}" for col in numeric_cols}))
