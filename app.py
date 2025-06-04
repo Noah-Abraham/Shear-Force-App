@@ -147,6 +147,16 @@ if bolts:
 
     fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
+    debug_df = pd.DataFrame({
+    "Bolt": [f"{i+1}" for i in range(len(bolts))],
+    "Y": [b.y for b in bolts],
+    "Y - YMC": [b.y - YMC for b in bolts],
+    "ka": [b.ka for b in bolts],
+    "ka*(Y-YMC)^2": [b.ka * (b.y - YMC)**2 for b in bolts],
+    })
+    st.subheader("IX Debug Table")
+    st.dataframe(debug_df)
+
     # Calculate bounding box based on bolt layout and scaled vector length
     vector_extent = []
     from collections import defaultdict
