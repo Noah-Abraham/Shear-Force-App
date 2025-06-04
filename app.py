@@ -235,36 +235,30 @@ if bolts:
     ax.set_ylabel(view_option[1] + " Position")
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XY View":
-            ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
-            ax.plot(x, y, 'ro')
-            label_text = f"Bolt {i+1}"
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
-            ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "XZ View":
-            ax.quiver(x, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
-            ax.plot(x, 0, 'ro')
-            index = bolt_positions[(round(x, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "YZ View":
-            ax.quiver(y, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
-            ax.plot(y, 0, 'ro')
-            index = bolt_positions[(round(y, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+    for i, b in enumerate(bolts):
+    if view_option == "XY View":
+        ax.plot(b.x, b.y, 'ro')
+        ax.quiver(b.x, b.y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
+        label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+        offset_x = -0.25
+        offset_y = -0.25
+        ax.text(b.x + offset_x, b.y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
+
+    elif view_option == "XZ View":
+        ax.plot(b.x, 0, 'ro')
+        ax.quiver(b.x, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
+        label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+        offset_x = -0.25
+        offset_z = -0.25
+        ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+
+    elif view_option == "YZ View":
+        ax.plot(b.y, 0, 'ro')
+        ax.quiver(b.y, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
+        label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+        offset_y = -0.25
+        offset_z = -0.25
+        ax.text(b.y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
@@ -288,16 +282,15 @@ if bolts:
     ax.set_aspect('equal', 'box')
     st.pyplot(fig)
 
-import pandas as pd
-st.subheader("Force Summary Table")
+    import pandas as pd
+    st.subheader("Force Summary Table")
 
-force_df = pd.DataFrame({
-    "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-    "X": [b.x for b in bolts],
-    "Y": [b.y for b in bolts],
-    "Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
-    "Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
-})
-force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
-
-st.dataframe(force_df.style.format("{:.3f}"))
+    force_df = pd.DataFrame({
+        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
+        "X": [b.x for b in bolts],
+        "Y": [b.y for b in bolts],
+        "Total Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
+        "Total Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
+    })
+    force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
+    st.dataframe(force_df.style.format({col: "{:.3f}" for col in force_df.select_dtypes(include=["float", "int"]).columns}))
