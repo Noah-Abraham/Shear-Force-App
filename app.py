@@ -43,8 +43,8 @@ for i in range(num_bolts):
     st.markdown(f"**Bolt {i + 1}**")
     x = st.number_input(f"X Position", key=f"x{i}", format="%.6f")
     y = st.number_input(f"Y Position", key=f"y{i}", format="%.6f")
-    ks = st.number_input(f"Shear Stiffness (KS)", key=f"ks{i}", min_value=0.0, format="%.6f")
-    ka = st.number_input(f"Axial Stiffness (KA)", key=f"ka{i}", min_value=0.0, format="%.6f")
+    ks = st.number_input(f"Shear Stiffness (KS)", key=f"ks{i}", min_value=0.0, format="%.6f", value-1.00)
+    ka = st.number_input(f"Axial Stiffness (KA)", key=f"ka{i}", min_value=0.0, format="%.6f", value=1.00)
     bolts.append(Bolt(x, y, ks, ka))
 
 # --- CALCULATION SECTION ---
@@ -87,7 +87,8 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * xp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, KAT):
+def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
+    KAT = sum(b.ka for b in bolts)
     RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
     forces = []
     for b in bolts:
@@ -99,15 +100,14 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, KAT):
         fty = MZ * rx * b.ks / RS if RS else 0.0
         vx = fx + ftx
         vy = fy + fty
-        vz = PZ * b.ka / sum(b.ka for b in bolts) if KAT else 0.0
+        vz = PZ * b.ka / KAT if KAT else 0.0
         forces.append((b.x, b.y, vx, vy, vz))
     return forces
-
 
 # --- DISPLAY RESULTS ---
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
-    compute_shear_force(bolts, PX, PY, MZ, XC, YC, TK, KAT)
+    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
     for b in bolts:
         b.distance_from_centroid(XMC,YMC)
     IX, IY, IXY = compute_reference_inertias(bolts)
