@@ -235,30 +235,37 @@ if bolts:
     ax.set_ylabel(view_option[1] + " Position")
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-    for i, b in enumerate(bolts):
+for i, b in enumerate(bolts):
+    vx, vy = shear_forces[i][2], shear_forces[i][3]
     if view_option == "XY View":
         ax.plot(b.x, b.y, 'ro')
-        ax.quiver(b.x, b.y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
+        ax.quiver(b.x, b.y, vx * vector_display_scale, vy * vector_display_scale,
+                  angles='xy', scale_units='xy', scale=1, color='blue')
         label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
         offset_x = -0.25
         offset_y = -0.25
-        ax.text(b.x + offset_x, b.y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
+        ax.text(b.x + offset_x, b.y + offset_y, label_text,
+                fontsize=7, color='black', ha='right', va='top')
 
     elif view_option == "XZ View":
         ax.plot(b.x, 0, 'ro')
-        ax.quiver(b.x, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
+        ax.quiver(b.x, 0, 0, b.ttbl * vector_display_scale,
+                  angles='xy', scale_units='xy', scale=1, color='green')
         label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
         offset_x = -0.25
         offset_z = -0.25
-        ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+        ax.text(b.x + offset_x, 0 + offset_z, label_text,
+                fontsize=7, color='black', ha='right', va='top')
 
     elif view_option == "YZ View":
         ax.plot(b.y, 0, 'ro')
-        ax.quiver(b.y, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
+        ax.quiver(b.y, 0, 0, b.ttbl * vector_display_scale,
+                  angles='xy', scale_units='xy', scale=1, color='purple')
         label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
         offset_y = -0.25
         offset_z = -0.25
-        ax.text(b.y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+        ax.text(b.y + offset_y, 0 + offset_z, label_text,
+                fontsize=7, color='black', ha='right', va='top')
             
 
         # Plot centroid positions and label arrows
