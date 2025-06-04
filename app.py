@@ -134,15 +134,24 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
 # --- DISPLAY RESULTS ---
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
-   
+    
     for b in bolts:
         b.distance_from_centroid(XMC,YMC)    
-   
+    
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
-   
+    
     IX, IY, IXY = compute_reference_inertias(bolts)
     theta = compute_principal_axes(IX, IY, IXY)
+    for b in bolts:
+        b.prime_distance_from_centroid(theta)
+    IT = np.sum(np.hypot(b.dx, b.dy)**2 for b in bolts)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
+    OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
+    POMX, POMY = resolved_moments(OMX, OMY, theta)
+    for b in bolts:
+        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ)
+        b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
+
    
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
