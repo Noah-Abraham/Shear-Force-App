@@ -25,20 +25,6 @@ class Bolt:
     def prime_distance_from_centroid(self, theta):
         self.ddx = np.sqrt(sum((self.x)**2, (self.y)**2))*np.sin((theta - np.arctan(self.x/self.y)))
         self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
-
-    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
-        VZ = PZ / num_bolts
-        self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
-        self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
-        self.ttblx = self.tblx
-        self.ttbly = self.tbly
-        self.ttbl = self.ttblx + self.ttbly + VZ
-
-    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
-        T = PY * (LX - XMC) - PX * (LY - YMC)
-        self.bslx = T * self.dx / IT
-        self.bsly = T * self.dy / IT
-        self.tbsl = np.hypot(self.bslx, self.bsly)
    
 # --- INPUT SECTION ---
 
@@ -134,24 +120,15 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
 # --- DISPLAY RESULTS ---
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
-    
+   
     for b in bolts:
         b.distance_from_centroid(XMC,YMC)    
-    
+   
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
-    
+   
     IX, IY, IXY = compute_reference_inertias(bolts)
     theta = compute_principal_axes(IX, IY, IXY)
-    for b in bolts:
-        b.prime_distance_from_centroid(theta)
-    IT = np.sum(np.hypot(b.dx, b.dy)**2 for b in bolts)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
-    OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
-    POMX, POMY = resolved_moments(OMX, OMY, theta)
-    for b in bolts:
-        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ)
-        b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
-
    
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
@@ -301,36 +278,8 @@ if bolts:
 
     # Optional: show a force summary table
     import pandas as pd
-
+    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
+    force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
     st.subheader("Force Summary Table")
-
-    force_df = pd.DataFrame({
-        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-        "X": [b.x for b in bolts],
-        "Y": [b.y for b in bolts],
-        "Total Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
-        "Total Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
-    })
-    force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
     st.dataframe(force_df.style.format("{:.3f}"))
-
-    st.subheader("Detailed Bolt Load Breakdown")
-
-    debug_df = pd.DataFrame({
-        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-        "x": [b.x for b in bolts],
-        "y": [b.y for b in bolts],
-        "dx": [b.dx for b in bolts],
-        "dy": [b.dy for b in bolts],
-        "ddx": [getattr(b, 'ddx', 0.0) for b in bolts],
-        "ddy": [getattr(b, 'ddy', 0.0) for b in bolts],
-        "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
-        "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
-        "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
-        "bslx (Sec. Shear X)": [getattr(b, 'bslx', 0.0) for b in bolts],
-        "bsly (Sec. Shear Y)": [getattr(b, 'bsly', 0.0) for b in bolts],
-        "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
-    })
-
-st.dataframe(debug_df.style.format("{:.4f}"))
 
