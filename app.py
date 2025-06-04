@@ -25,6 +25,20 @@ class Bolt:
     def prime_distance_from_centroid(self, theta):
         self.ddx = np.sqrt(sum((self.x)**2, (self.y)**2))*np.sin((theta - np.arctan(self.x/self.y)))
         self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
+
+    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
+        VZ = PZ / num_bolts
+        self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
+        self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
+        self.ttblx = self.tblx
+        self.ttbly = self.tbly
+        self.ttbl = self.ttblx + self.ttbly + VZ
+
+    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
+        T = PY * (LX - XMC) - PX * (LY - YMC)
+        self.bslx = T * self.dx / IT
+        self.bsly = T * self.dy / IT
+        self.tbsl = np.hypot(self.bslx, self.bsly)
    
 # --- INPUT SECTION ---
 
