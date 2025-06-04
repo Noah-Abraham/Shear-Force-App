@@ -284,21 +284,21 @@ if bolts:
     st.dataframe(force_df.style.format("{:.3f}"))
     st.subheader("Detailed Bolt Load Breakdown")
 
-debug_df = pd.DataFrame({
-    "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-    "X": [b.x for b in bolts],
-    "Y": [b.y for b in bolts],
-    "dx": [b.dx for b in bolts],
-    "dy": [b.dy for b in bolts],
-    "ddx": [getattr(b, 'ddx', 0.0) for b in bolts],
-    "ddy": [getattr(b, 'ddy', 0.0) for b in bolts],
-    "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
-    "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
-    "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
-    "bslx (Sec. Shear X)": [getattr(b, 'bslx', 0.0) for b in bolts],
-    "bsly (Sec. Shear Y)": [getattr(b, 'bsly', 0.0) for b in bolts],
-    "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
-})
+    debug_df = pd.DataFrame({
+        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
+        "X": [b.x for b in bolts],
+        "Y": [b.y for b in bolts],
+        "dx": [b.dx for b in bolts],
+        "dy": [b.dy for b in bolts],
+        "ddx": [getattr(b, 'ddx', 0.0) for b in bolts],
+        "ddy": [getattr(b, 'ddy', 0.0) for b in bolts],
+        "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
+        "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
+        "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
+        "bslx (Sec. Shear X)": [getattr(b, 'bslx', 0.0) for b in bolts],
+        "bsly (Sec. Shear Y)": [getattr(b, 'bsly', 0.0) for b in bolts],
+        "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
+    })
 
-st.dataframe(debug_df.style.format("{:.4f}"))
+    st.dataframe(debug_df.style.format("{:.4f}"))
 
