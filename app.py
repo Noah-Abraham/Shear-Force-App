@@ -13,18 +13,21 @@ class Bolt:
 
     def position(self):
         return np.array([self.x, self.y])
-    
+
     def distance_from_centroid(self, XMC, YMC):
         self.dx = self.x - XMC
         self.dy = self.y - YMC
 
     def prime_distance_from_centroid(self, theta):
         theta_rad = np.radians(theta)
-        self.ddx = np.hypot((self.dx), (self.dy))*np.sin((theta_rad - np.arctan2(self.dx, self.dy)))
-        self.ddy = np.hypot((self.dx), (self.dy))*np.cos((theta_rad - np.arctan2(self.dx, self.dy)))
+        r = np.hypot(self.dx, self.dy)
+        angle = np.arctan2(self.dy, self.dx)
+        self.ddx = r * np.cos(angle - theta_rad)
+        self.ddy = r * np.sin(angle - theta_rad)
 
-    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ):
-        VZ = PZ / num_bolts  # Uniform axial load
+    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ, bolts):
+        KAT = sum(b.ka for b in bolts)
+        VZ = PZ * self.ka / KAT if KAT else 0.0
         self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
         self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
         self.ttblx = self.tblx
@@ -33,10 +36,9 @@ class Bolt:
 
     def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
         T = PY * (LX - XMC) - PX * (LY - YMC)
-        self.bslx = T * self.dx / IT
-        self.bsly = T * self.dy / IT
+        self.bslx = T * self.dx / IT if IT != 0 else 0.0
+        self.bsly = T * self.dy / IT if IT != 0 else 0.0
         self.tbsl = np.hypot(self.bslx, self.bsly)
-
         
 
     
@@ -136,7 +138,7 @@ if bolts:
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     for b in bolts:
-        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ)
+        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, bolts)
         b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
 
     
