@@ -58,7 +58,7 @@ MY = st.number_input("External Moment about Y-axis (MY) [kNm]", value=0.0)
 MZ = st.number_input("External Moment about Z-axis (MZ) [kNm]", value=0.0)
 
 st.subheader("Bolt Configuration")
-num_bolts = st.number_input("Number of Bolts", min_value=1, step=1)
+num_bolts = int(st.number_input("Number of Bolts", min_value=1, step=1))
 bolts = []
 
 for i in range(num_bolts):
