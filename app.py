@@ -31,9 +31,8 @@ class Bolt:
         self.tbly = POMY * self.ddy/IPY
         self.ttbl = self.ttblx + self.ttbly + VZ
 
-    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC):
+    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
         T = PY * (LX - XMC) - PX * (LY - YMC)
-        IT = np.sum(np.hypot(self.dx, self.dy)**2)
         self.bslx = T * self.dx / IT
         self.bsly = T * self.dy / IT
         self.tbsl = np.hypot(self.bslx, self.bsly)
@@ -150,13 +149,13 @@ if bolts:
     theta = compute_principal_axes(IX, IY, IXY)
     for b in bolts:
         b.prime_distance_from_centroid(theta)
-    
+    IT = np.sum(np.hypot(self.dx, self.dy)**2)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     for b in bolts:
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ)
-        b.secondary_shear(PX, PY, LX, LY, XMC, YMC)
+        b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
 
     
     st.subheader("Centroid Locations")
