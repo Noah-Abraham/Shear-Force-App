@@ -87,7 +87,7 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * xp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK):
+def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, KAT):
     RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
     forces = []
     for b in bolts:
