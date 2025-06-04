@@ -248,7 +248,7 @@ if bolts:
 
     # Optional: show a force summary table
     import pandas as pd
-    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ", "KS", "KA", "b.dx", "b.dy"])
+    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
     force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
     st.subheader("Force Summary Table")
     st.dataframe(force_df.style.format("{:.3f}"))
