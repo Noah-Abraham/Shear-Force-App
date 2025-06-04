@@ -106,21 +106,45 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * xp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
-    KAT = sum(b.ka for b in bolts)
-    RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
+def compute_shear_forces(bolts, PX, PY, MZ, XC, YC):
+    # Calculate total shear stiffness sum
+    total_ks = sum(b.ks for b in bolts)
+    
+    # Calculate polar moment of inertia about Z
+    J = 0.0
+    for b in bolts:
+        b.dx = b.x - XC
+        b.dy = b.y - YC
+        r = np.hypot(b.dx, b.dy)
+        J += b.ks * r**2
+    
     forces = []
     for b in bolts:
-        rx = b.x - XC
-        ry = YC - b.y
-        fx = PX * b.ks / TK if TK else 0.0
-        fy = PY * b.ks / TK if TK else 0.0
-        ftx = MZ * ry * b.ks / RS if RS else 0.0
-        fty = MZ * rx * b.ks / RS if RS else 0.0
-        vx = fx + ftx
-        vy = fy + fty
-        vz = PZ * b.ka / KAT if KAT else 0.0
-        forces.append((b.x, b.y, vx, vy, vz))
+        r = np.hypot(b.dx, b.dy)
+        # Avoid division by zero for bolts exactly at centroid
+        if r > 1e-12 and J > 0:
+            # Tangential unit vector perpendicular to radius vector
+            tx = -b.dy / r
+            ty = b.dx / r
+            
+            # Torsional shear component
+            torsion_shear_mag = MZ * b.ks * r / J
+            torsion_shear_x = torsion_shear_mag * tx
+            torsion_shear_y = torsion_shear_mag * ty
+        else:
+            torsion_shear_x = 0.0
+            torsion_shear_y = 0.0
+        
+        # Direct shear distributed by shear stiffness
+        direct_shear_x = PX * b.ks / total_ks if total_ks else 0.0
+        direct_shear_y = PY * b.ks / total_ks if total_ks else 0.0
+        
+        # Total shear vector per bolt
+        shear_x = direct_shear_x + torsion_shear_x
+        shear_y = direct_shear_y + torsion_shear_y
+        
+        forces.append((b.x, b.y, shear_x, shear_y))
+    
     return forces
 
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
