@@ -285,8 +285,7 @@ if bolts:
     ax.set_aspect('equal', 'box')
     st.pyplot(fig)
 
-    # Optional: show a force summary table
-   import pandas as pd
+import pandas as pd
 st.subheader("Force Summary Table")
 
 force_df = pd.DataFrame({
@@ -295,7 +294,7 @@ force_df = pd.DataFrame({
     "Y": [b.y for b in bolts],
     "Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
     "Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
-    })
+})
 force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
 
 st.dataframe(force_df.style.format("{:.3f}"))
