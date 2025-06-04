@@ -125,8 +125,8 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
     return forces
 
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
-    OMX = PX * LZ - PZ * (XMC - LX)
-    OMY = PY * LZ - PZ * (YMC - LY)
+    OMX = PX * LZ + PZ * (XMC - LX)
+    OMY = PY * LZ + PZ * (YMC - LY)
     return OMX, OMY
 
 def resolved_moments(OMX, OMY, theta):
