@@ -152,8 +152,8 @@ if bolts:
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     for b in bolts:
-        b.tensile_bolt_loads(bolts, POMX, POMY, IPX, IPY, PZ)
-        b.secondary_shear(bolts, PX, PY, LX, LY, XMC, YMC)
+        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ)
+        b.secondary_shear(PX, PY, LX, LY, XMC, YMC)
 
     
     st.subheader("Centroid Locations")
