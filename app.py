@@ -107,6 +107,7 @@ def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, KAT):
 # --- DISPLAY RESULTS ---
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
+    compute_shear_force(bolts, PX, PY, MZ, XC, YC, TK, KAT)
     for b in bolts:
         b.distance_from_centroid(XMC,YMC)
     IX, IY, IXY = compute_reference_inertias(bolts)
