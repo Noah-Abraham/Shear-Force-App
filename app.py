@@ -146,6 +146,9 @@ if bolts:
     for b in bolts:
         b.prime_distance_from_centroid(theta)
     IT = np.sum(np.hypot(b.dx, b.dy)**2 for b in bolts)
+    st.write(f"PX={PX}, PY={PY}, PZ={PZ}")
+    st.write(f"LX={LX}, LY={LY}, LZ={LZ}")
+    st.write(f"XMC={XMC}, YMC={YMC}")
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
@@ -158,7 +161,7 @@ if bolts:
 
     T = PY * (LX - XMC) - PX * (LY - YMC)
     st.write(f"T (Torsional moment about centroid): {T:.3f}")
-    
+
     for i, b in enumerate(bolts):
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
         direct_shear_x = shear_forces[i][2]
