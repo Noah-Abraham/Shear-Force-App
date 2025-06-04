@@ -149,7 +149,7 @@ if bolts:
     theta = compute_principal_axes(IX, IY, IXY)
     for b in bolts:
         b.prime_distance_from_centroid(theta)
-    IT = np.sum(np.hypot(self.dx, self.dy)**2)
+    IT = np.sum(np.hypot(bolt.dx, bolt.dy)**2)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
