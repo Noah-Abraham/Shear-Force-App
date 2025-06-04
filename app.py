@@ -1,254 +1,178 @@
-import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
-st.title("Shear Force & Axial Bolt Load Calculator")
-
+# --- Define the Bolt class ---
 class Bolt:
-    def __init__(self, x, y, ks, ka):
-        self.x = x  # X-coordinate
-        self.y = y  # Y-coordinate
-        self.ks = ks  # Shear stiffness
-        self.ka = ka  # Axial stiffness
-
-    def position(self):
-        return np.array([self.x, self.y])
+    def __init__(self, x, y, ks=1.0, ka=1.0):
+        self.x = x  # position x
+        self.y = y  # position y
+        self.ks = ks  # shear stiffness (not used here but placeholder)
+        self.ka = ka  # axial stiffness (not used here but placeholder)
+        
+        # Variables to store results
+        self.dx = 0.0
+        self.dy = 0.0
+        self.ddx = 0.0
+        self.ddy = 0.0
+        self.ttblx = 0.0
+        self.ttbly = 0.0
+        self.ttbl = 0.0
+        self.bslx = 0.0
+        self.bsly = 0.0
+        self.tbsl = 0.0
     
     def distance_from_centroid(self, XMC, YMC):
         self.dx = self.x - XMC
         self.dy = self.y - YMC
-
-    def prime_distance_from_centroid(self, theta):
-        self.ddx = np.sqrt(sum((self.x)**2, (self.y)**2))*np.sin((theta - np.arctan(self.x/self.y)))
-        self.ddy = np.sqrt(sum((self.x)**2, (self.y)**2))*np.cos((theta - np.arctan(self.x/self.y)))
     
-# --- INPUT SECTION ---
+    def prime_distance_from_centroid(self, theta):
+        r = np.hypot(self.x, self.y)
+        angle = np.arctan2(self.y, self.x)
+        self.ddx = r * np.sin(np.radians(theta) - angle)
+        self.ddy = r * np.cos(np.radians(theta) - angle)
+    
+    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ, num_bolts):
+        VZ = PZ / num_bolts if num_bolts else 0.0
+        self.ttblx = (POMX * self.ddx / IPX) if IPX != 0 else 0.0
+        self.ttbly = (POMY * self.ddy / IPY) if IPY != 0 else 0.0
+        self.ttbl = self.ttblx + self.ttbly + VZ
+    
+    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT):
+        T = PY * (LX - XMC) - PX * (LY - YMC)
+        if IT == 0:
+            self.bslx = 0.0
+            self.bsly = 0.0
+            self.tbsl = 0.0
+        else:
+            self.bslx = T * self.dx / IT
+            self.bsly = T * self.dy / IT
+            self.tbsl = np.hypot(self.bslx, self.bsly)
 
-st.subheader("Load Cases")
-PX = st.number_input("External Force in X (PX) [kN]", value=0.0)
-PY = st.number_input("External Force in Y (PY) [kN]", value=0.0)
-PZ = st.number_input("Axial Force (PZ) [kN]", value=0.0)
-LX = st.number_input("X Coordinate of Load Application Point", value=0.0)
-LY = st.number_input("Y Coordinate of Load Application Point", value=0.0)
-LZ = st.number_input("Z Coordinate (for Torsion)", value=0.0)
-MX = st.number_input("External Moment about X-axis (MX) [kNm]", value=0.0)
-MY = st.number_input("External Moment about Y-axis (MY) [kNm]", value=0.0)
-MZ = st.number_input("External Moment about Z-axis (MZ) [kNm]", value=0.0)
+# --- Helper functions ---
+def compute_centroid(bolts):
+    XMC = np.mean([b.x for b in bolts])
+    YMC = np.mean([b.y for b in bolts])
+    return XMC, YMC
 
-st.subheader("Bolt Configuration")
-num_bolts = st.number_input("Number of Bolts", min_value=1, step=1)
-bolts = []
-
-for i in range(num_bolts):
-    st.markdown(f"**Bolt {i + 1}**")
-    x = st.number_input(f"X Position", key=f"x{i}", format="%.6f")
-    y = st.number_input(f"Y Position", key=f"y{i}", format="%.6f")
-    ks = st.number_input(f"Shear Stiffness (KS)", key=f"ks{i}", min_value=0.0, format="%.6f", value=1.00)
-    ka = st.number_input(f"Axial Stiffness (KA)", key=f"ka{i}", min_value=0.0, format="%.6f", value=1.00)
-    bolts.append(Bolt(x, y, ks, ka))
-
-# --- CALCULATION SECTION ---
-def compute_centroids(bolts):
-    TK = sum(b.ks for b in bolts)
-    KAT = sum(b.ka for b in bolts)
-    x1 = sum(b.x * b.ks for b in bolts)
-    y1 = sum(b.y * b.ks for b in bolts)
-    xm1 = sum(b.x * b.ka for b in bolts)
-    ym1 = sum(b.y * b.ka for b in bolts)
-    XC = x1 / TK if TK else 0.0
-    YC = y1 / TK if TK else 0.0
-    XMC = xm1 / KAT if KAT else 0.0
-    YMC = ym1 / KAT if KAT else 0.0
-    return XC, YC, XMC, YMC, TK, KAT
-
-def compute_reference_inertias(bolts):
-    IX = sum(b.ka * b.dy**2 for b in bolts)
-    IY = sum(b.ka * b.dx**2 for b in bolts)
-    IXY = sum(b.ka * b.dx * b.dy for b in bolts)
+def compute_reference_inertias(bolts, XMC, YMC):
+    IX = sum((b.y - YMC)**2 for b in bolts)
+    IY = sum((b.x - XMC)**2 for b in bolts)
+    IXY = sum((b.x - XMC)*(b.y - YMC) for b in bolts)
     return IX, IY, IXY
 
 def compute_principal_axes(IX, IY, IXY):
-    if abs(IXY) < 1e-4:
-        theta = 0.0
-    elif abs(IX - IY) < 1e-6:
-        theta = 45.0
+    denom = IX - IY
+    if denom == 0:
+        theta = 45
     else:
-        theta = 0.5 * np.degrees(np.arctan2(2 * IXY, (IY - IX)))
+        theta = 0.5 * np.degrees(np.arctan2(-2 * IXY, denom))
     return theta
 
 def compute_principal_moments(bolts, XMC, YMC, theta):
-    theta_rad = np.radians(theta)
+    # Rotate coordinates by theta to principal axes
     IPX = 0.0
     IPY = 0.0
-    for b in bolts:  
-        xp = b.dx * np.cos(theta_rad) + b.dy * np.sin(theta_rad)
-        yp = -b.dx * np.sin(theta_rad) + b.dy * np.cos(theta_rad)
-        IPX += b.ka * yp**2
-        IPY += b.ka * xp**2
+    for b in bolts:
+        dx = b.x - XMC
+        dy = b.y - YMC
+        # Rotate
+        dxp = dx * np.cos(np.radians(theta)) + dy * np.sin(np.radians(theta))
+        dyp = -dx * np.sin(np.radians(theta)) + dy * np.cos(np.radians(theta))
+        IPX += dxp**2
+        IPY += dyp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
-    KAT = sum(b.ka for b in bolts)
-    RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
-    forces = []
-    for b in bolts:
-        rx = b.x - XC
-        ry = YC - b.y
-        fx = PX * b.ks / TK if TK else 0.0
-        fy = PY * b.ks / TK if TK else 0.0
-        ftx = MZ * ry * b.ks / RS if RS else 0.0
-        fty = MZ * rx * b.ks / RS if RS else 0.0
-        vx = fx + ftx
-        vy = fy + fty
-        vz = PZ * b.ka / KAT if KAT else 0.0
-        forces.append((b.x, b.y, vx, vy, vz))
-    return forces
+def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
+    # Moments about centroid due to loads at point (LX, LY, LZ)
+    OMX = PY * (LZ - 0) - PZ * (LY - YMC)
+    OMY = PZ * (LX - XMC) - PX * (LZ - 0)
+    return OMX, OMY
 
-# --- DISPLAY RESULTS ---
-if bolts:
-    XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
-    
-    for b in bolts:
-        b.distance_from_centroid(XMC,YMC)    
-    
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
-   
-    IX, IY, IXY = compute_reference_inertias(bolts)
-    theta = compute_principal_axes(IX, IY, IXY)
-    IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
-    
-    st.subheader("Centroid Locations")
-    st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
-    st.write(f"Axial Centroid (XMC, YMC): ({XMC:.6f}, {YMC:.6f})")
+def resolved_moments(OMX, OMY, theta):
+    POMX = OMX * np.cos(np.radians(theta)) + OMY * np.sin(np.radians(theta))
+    POMY = -OMX * np.sin(np.radians(theta)) + OMY * np.cos(np.radians(theta))
+    return POMX, POMY
 
-    st.subheader("Reference Axis Inertias")
-    st.write(f"Moment of Inertia about X (IX): {IX:.6f}")
-    st.write(f"Moment of Inertia about Y (IY): {IY:.6f}")
-    st.write(f"Product of Inertia (IXY): {IXY:.6f}")
+# --- Main program ---
 
-    st.subheader("Principal Axes")
-    st.write(f"Rotation Angle to Principal Axis (θ): {theta:.6f} degrees")
-    st.write(f"Principal Moment IPX: {IPX:.6f}")
-    st.write(f"Principal Moment IPY: {IPY:.6f}")
+# Example bolt positions (x,y)
+bolt_coords = [(0.5, 1.0), (1.5, 1.0), (1.5, 0.0), (0.5, 0.0)]
+bolts = [Bolt(x, y) for x, y in bolt_coords]
 
-    view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
-    # Fixed normalized arrow scale based on layout, without slider
-    layout_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = 0.25 * layout_span  # Set arrow size relative to layout size
+# External applied forces and load application point
+PX, PY, PZ = 1000, 500, 300  # Forces in Newtons
+LX, LY, LZ = 1.0, 0.5, 0.0  # Load application coordinates
 
-    # Normalize force vectors based on max force and layout span
-    force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)]
-    max_force = max(force_mags) if force_mags else 1
-    bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
-    normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
-    vector_display_scale = 1 / (3 * normalized_arrow_scale)
+num_bolts = len(bolts)
 
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
+# Calculate centroid
+XMC, YMC = compute_centroid(bolts)
 
-    fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
+# Calculate bolt distances from centroid
+for b in bolts:
+    b.distance_from_centroid(XMC, YMC)
 
-    # Calculate bounding box based on bolt layout and scaled vector length
-    vector_extent = []
-    from collections import defaultdict
+# Calculate reference moments of inertia
+IX, IY, IXY = compute_reference_inertias(bolts, XMC, YMC)
 
-    bolt_positions = defaultdict(list)
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XZ View":
-            key = (round(x, 3), 0)
-        elif view_option == "YZ View":
-            key = (round(y, 3), 0)
-        else:
-            key = (round(x, 3), round(y, 3))
-        bolt_positions[key].append(i + 1)
+# Calculate principal axis angle
+theta = compute_principal_axes(IX, IY, IXY)
 
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        bolt_label = f"Bolt {i+1}"
-        if view_option == "XY View":
-            vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
-        elif view_option == "XZ View":
-            vector_extent.append((x, vz / normalized_arrow_scale))
-        elif view_option == "YZ View":
-            vector_extent.append((y, vz / normalized_arrow_scale))
+# Calculate principal moments of inertia
+IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
-    all_x = [b.x for b in bolts]
-    all_y = [b.y for b in bolts]
+# Calculate moments about centroid
+OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
 
-    if view_option == "XY View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "XZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "YZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
+# Resolve moments in principal axes
+POMX, POMY = resolved_moments(OMX, OMY, theta)
 
-    x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
-    y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
+# Compute IT for secondary shear calculation
+IT = sum(b.dx**2 + b.dy**2 for b in bolts)
 
-    ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
-    ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
-    ax.set_title(f"Bolt Force Vectors ({view_option})")
-    ax.set_xlabel(view_option[0] + " Position")
-    ax.set_ylabel(view_option[1] + " Position")
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+# Calculate loads on each bolt
+for b in bolts:
+    b.prime_distance_from_centroid(theta)
+    b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
+    b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT)
 
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XY View":
-            ax.quiver(x, y, vx * vector_display_scale, vy * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
-            ax.plot(x, y, 'ro')
-            label_text = f"Bolt {i+1}"
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_y = -0.25 if vy >= 0 else 0.25  # XY View uses vx and vy only
-            ax.text(x + offset_x, y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "XZ View":
-            ax.quiver(x, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
-            ax.plot(x, 0, 'ro')
-            index = bolt_positions[(round(x, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(x, 3), 0)])
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_x = -0.25 if vx >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-            
-        elif view_option == "YZ View":
-            ax.quiver(y, 0, 0, vz * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
-            ax.plot(y, 0, 'ro')
-            index = bolt_positions[(round(y, 3), 0)].index(i + 1)
-            label_text = ' & '.join(str(j) for j in bolt_positions[(round(y, 3), 0)])
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = (-0.25 if vz >= 0 else 0.25) + 0.15 * index
-            offset_y = -0.25 if vy >= 0 else 0.25
-            offset_z = -0.25 if vz >= 0 else 0.25
-            ax.text(y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-            
+# --- Prepare DataFrame for display ---
+force_data = {
+    "X": [b.x for b in bolts],
+    "Y": [b.y for b in bolts],
+    "Total Tensile Load (ttbl)": [b.ttbl for b in bolts],
+    "Total Shear Load (tbsl)": [b.tbsl for b in bolts],
+}
+force_df = pd.DataFrame(force_data, index=[f"Bolt {i+1}" for i in range(num_bolts)])
 
-        # Plot centroid positions and label arrows
-    if view_option == "XY View": 
-        ax.plot(LX, LY, 'kx', label='Load Point')
-    elif view_option == "YZ View":
-        ax.plot(LY, LZ, 'kx', label='Load Point')
-    elif view_option == "XZ View":
-        ax.plot(LX, LZ, 'kx', label='Load Point')
-    if view_option == "XY View":
-        ax.plot(XC, YC, 'bs', label='Shear Centroid')
-        ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
-    elif view_option == "XZ View":
-        ax.plot(XC, 0, 'bs', label='Shear Centroid')
-        ax.plot(XMC, 0, 'gs', label='Axial Centroid')
-    elif view_option == "YZ View":
-        ax.plot(YC, 0, 'bs', label='Shear Centroid')
-        ax.plot(YMC, 0, 'gs', label='Axial Centroid')
+print(force_df.round(2))
 
-    ax.legend()
-    ax.set_aspect('equal', 'box')
-    st.pyplot(fig)
+# --- Plotting ---
+fig, ax = plt.subplots(figsize=(8, 6))
 
-    # Optional: show a force summary table
-    import pandas as pd
-    force_df = pd.DataFrame(shear_forces, columns=["X", "Y", "VX", "VY", "VZ"])
-    force_df.index = [f"Bolt {i+1}" for i in range(len(shear_forces))]
-    st.subheader("Force Summary Table")
-    st.dataframe(force_df.style.format("{:.3f}"))
+# Plot bolts
+ax.plot([b.x for b in bolts], [b.y for b in bolts], 'ro', label='Bolts')
+
+# Plot shear load vectors as arrows
+vector_scale = 0.1  # Scale factor for arrows length
+for b in bolts:
+    if b.tbsl > 0:
+        # Normalize shear vector direction
+        vx = b.bslx / b.tbsl
+        vy = b.bsly / b.tbsl
+        # Scale vector by shear load magnitude for visibility
+        ax.arrow(b.x, b.y, vx * b.tbsl * vector_scale, vy * b.tbsl * vector_scale,
+                 head_width=0.05, head_length=0.1, fc='blue', ec='blue')
+
+    # Annotate tensile load next to each bolt
+    ax.text(b.x, b.y + 0.1, f"TTBL: {b.ttbl:.1f} N", color='red', fontsize=8, ha='center')
+
+# Labels and grid
+ax.set_xlabel('X Position')
+ax.set_ylabel('Y Position')
+ax.set_title('Bolt Loads: Shear Vectors (Blue) & Tensile Load (Red text)')
+ax.grid(True)
+ax.legend()
+plt.axis('equal')
+plt.show()
