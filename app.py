@@ -131,8 +131,8 @@ def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
 
 def resolved_moments(OMX, OMY, theta):
     theta_rad = np.radians(theta)
-    POMX = OMY * np.sin(theta_rad) + OMX * np.cos(theta_rad)
-    POMY = OMY * np.cos(theta_rad) + OMX * np.sin(theta_rad)
+    POMX = OMX * np.cos(theta_rad) + OMY * np.sin(theta_rad)
+    POMY = -OMX * np.sin(theta_rad) + OMY * np.cos(theta_rad)
     return POMX, POMY
 
 # --- DISPLAY RESULTS ---
