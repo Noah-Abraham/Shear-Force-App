@@ -33,8 +33,8 @@ class Bolt:
         self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
         # Combine moment-induced tensions vectorially
         self.ttbl_moment = np.hypot(self.tblx, self.tbly)
-        # Total tension is direct + moment
-        self.ttbl = VZ + self.ttbl_moment
+        # Total tension is vector sum of direct and moment-induced tension
+        self.ttbl = np.hypot(VZ, self.ttbl_moment)
 
     def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT, direct_shear_x, direct_shear_y):
         # Torsional moment about centroid
