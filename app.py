@@ -29,8 +29,8 @@ class Bolt:
         # Direct tension from axial force
         VZ = PZ / num_bolts if num_bolts else 0.0
         # Moment-induced tension (principal axes)
-        self.tblx = POMX * self.ddy / IPX if IPX != 0 else 0.0
-        self.tbly = POMY * self.ddx / IPY if IPY != 0 else 0.0
+        self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
+        self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
         # Total tension is algebraic sum (not vector sum)
         self.ttbl = VZ + self.tblx + self.tbly
 
