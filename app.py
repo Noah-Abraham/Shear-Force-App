@@ -25,12 +25,12 @@ class Bolt:
         self.ddx = r * np.cos(theta_rad - phi)
         self.ddy = r * np.sin(theta_rad - phi)
 
-    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ, num_bolts):
+    def tensile_bolt_loads(self, POMX, POMY, IPMAX, IPMIN, PZ, num_bolts):
         # Direct tension from axial force
         VZ = PZ / num_bolts if num_bolts else 0.0
         # Moment-induced tension (principal axes)
-        self.tblx = POMX * self.ddx / IPX if IPX != 0 else 0.0
-        self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
+        self.tblx = POMX * self.ddx / IPMAX if IPMAX != 0 else 0.0
+        self.tbly = POMY * self.ddy / IPMIN if IPMIN != 0 else 0.0
         # Total tension is algebraic sum (not vector sum)
         self.ttbl = VZ + self.tblx + self.tbly
 
@@ -98,14 +98,14 @@ def compute_principal_axes(IX, IY, IXY):
 
 def compute_principal_moments(bolts, XMC, YMC, theta):
     theta_rad = np.radians(theta)
-    IPX = 0.0
-    IPY = 0.0
+    IPMAX = 0.0
+    IPMIN = 0.0
     for b in bolts:  
         xp = b.dx * np.cos(theta_rad) + b.dy * np.sin(theta_rad)
         yp = -b.dx * np.sin(theta_rad) + b.dy * np.cos(theta_rad)
-        IPX += b.ka * yp**2
-        IPY += b.ka * xp**2
-    return IPX, IPY
+        IPMAX += b.ka * xp**2
+        IPMIN += b.ka * yp**2
+    return IPMAX, IPMIN
 
 def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
     KAT = sum(b.ka for b in bolts)
@@ -151,19 +151,19 @@ if bolts:
     st.write(f"XMC={XMC}, YMC={YMC}")
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
-    IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
+    IPMAX, IPMIN = compute_principal_moments(bolts, XMC, YMC, theta)
 
 # Debug print for key values
     st.write(f"OMX: {OMX:.3f}, OMY: {OMY:.3f}")
     st.write(f"POMX: {POMX:.3f}, POMY: {POMY:.3f}")
-    st.write(f"IPX: {IPX:.3f}, IPY: {IPY:.3f}")
+    st.write(f"IPMAX: {IPMAX:.3f}, IPMIN: {IPMIN:.3f}")
     st.write(f"IT: {IT:.3f}")
 
     T = PY * (LX - XMC) - PX * (LY - YMC)
     st.write(f"T (Torsional moment about centroid): {T:.3f}")
 
     for i, b in enumerate(bolts):
-        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
+        b.tensile_bolt_loads(POMX, POMY, IPMAX, IPMIN, PZ, num_bolts)
         direct_shear_x = shear_forces[i][2]
         direct_shear_y = shear_forces[i][3]
         b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT, direct_shear_x, direct_shear_y)
@@ -179,8 +179,8 @@ if bolts:
 
     st.subheader("Principal Axes")
     st.write(f"Rotation Angle to Principal Axis (θ): {theta:.6f} degrees")
-    st.write(f"Principal Moment IPX: {IPX:.6f}")
-    st.write(f"Principal Moment IPY: {IPY:.6f}")
+    st.write(f"Principal Moment IPMAX: {IPMAX:.6f}")
+    st.write(f"Principal Moment IPMIN: {IPMIN:.6f}")
 
     view_option = st.radio("Select Force View", ["XY View", "XZ View", "YZ View"])
     layout_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
