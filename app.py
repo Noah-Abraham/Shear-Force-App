@@ -243,24 +243,39 @@ if bolts:
 
     for i, b in enumerate(bolts):
         if view_option == "XY View":
+            # Plot shear vector (b.bslx, b.bsly) and label with tension and shear
             ax.plot(b.x, b.y, 'ro')
-            ax.quiver(b.x, b.y, shear_forces[i][2] * vector_display_scale, shear_forces[i][3] * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='blue')
+            ax.quiver(
+                b.x, b.y,
+                b.bslx * vector_display_scale, b.bsly * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='blue'
+            )
             label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
             offset_x = -0.25
             offset_y = -0.25
             ax.text(b.x + offset_x, b.y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
 
         elif view_option == "XZ View":
+            # Plot tension as vertical vector
             ax.plot(b.x, 0, 'ro')
-            ax.quiver(b.x, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='green')
+            ax.quiver(
+                b.x, 0,
+                0, b.ttbl * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='green'
+            )
             label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
             offset_x = -0.25
             offset_z = -0.25
             ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
 
         elif view_option == "YZ View":
+            # Plot tension as vertical vector
             ax.plot(b.y, 0, 'ro')
-            ax.quiver(b.y, 0, 0, b.ttbl * vector_display_scale, angles='xy', scale_units='xy', scale=1, color='purple')
+            ax.quiver(
+                b.y, 0,
+                0, b.ttbl * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='purple'
+            )
             label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
             offset_y = -0.25
             offset_z = -0.25
