@@ -39,10 +39,10 @@ class Bolt:
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, direct_shear_x, direct_shear_y):
         # Torsional moment about centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        self.bslx = T * self.sdx / IT if IT != 0 else 0.0
-        self.bsly = T * self.sdy / IT if IT != 0 else 0.0
+        self.bslx = (T * self.sdx / IT) + PX / num_bolts
+        self.bsly = (T * self.sdy / IT) + PY / num_bolts
         # Total shear is vector sum of direct and secondary
-        self.tbsl = np.hypot(direct_shear_x + self.bslx, direct_shear_y + self.bsly)
+        self.tbsl = np.hypot(self.bslx, self.bsly)
 
 # --- INPUT SECTION ---
 
