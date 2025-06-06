@@ -250,10 +250,15 @@ if bolts:
                 b.bslx * vector_display_scale, b.bsly * vector_display_scale,
                 angles='xy', scale_units='xy', scale=1, color='blue'
             )
+            # Improved label offset and background for readability
+            offset_x = 0.4 if i % 2 == 0 else -0.4
+            offset_y = 0.4 if i % 3 == 0 else -0.4
             label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
-            offset_x = -0.25
-            offset_y = -0.25
-            ax.text(b.x + offset_x, b.y + offset_y, label_text, fontsize=7, color='black', ha='right', va='top')
+            ax.text(
+                b.x + offset_x, b.y + offset_y, label_text,
+                fontsize=6, color='black', ha='center', va='center',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
+            )
 
         elif view_option == "XZ View":
             # Plot tension as vertical vector
