@@ -14,31 +14,33 @@ class Bolt:
     def position(self):
         return np.array([self.x, self.y])
     
-    def distance_from_centroid(self, XMC, YMC):
-        self.dx = self.x - XMC
-        self.dy = self.y - YMC
+    def distance_from_centroid(self, XMC, YMC, XC, YC):
+        self.adx = self.x - XMC
+        self.ady = self.y - YMC
+        self.sdx = self.x - XC
+        self.sdy = self.y - YC
 
     def prime_distance_from_centroid(self, theta):
         theta_rad = np.radians(theta)
-        r = np.hypot(self.dx, self.dy)
-        phi = np.arctan2(self.dy, self.dx)
-        self.ddx = r * np.cos(theta_rad - phi)
-        self.ddy = r * np.sin(theta_rad - phi)
+        r = np.hypot(self.adx, self.ady)
+        phi = np.arctan2(self.ady, self.adx)
+        self.addx = r * np.cos(theta_rad - phi)
+        self.addy = r * np.sin(theta_rad - phi)
 
     def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ, num_bolts):
         # Direct tension from axial force
         VZ = PZ / num_bolts if num_bolts else 0.0
         # Moment-induced tension (principal axes)
-        self.tblx = -POMX * self.ddx / IPX if IPX != 0 else 0.0
-        self.tbly = POMY * self.ddy / IPY if IPY != 0 else 0.0
+        self.tblx = -POMX * self.addx / IPX if IPX != 0 else 0.0
+        self.tbly = POMY * self.addy / IPY if IPY != 0 else 0.0
         # Total tension is algebraic sum (not vector sum)
         self.ttbl = VZ + self.tblx + self.tbly
 
-    def secondary_shear(self, PX, PY, LX, LY, XMC, YMC, IT, direct_shear_x, direct_shear_y):
+    def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, direct_shear_x, direct_shear_y):
         # Torsional moment about centroid
-        T = PY * (LX - XMC) - PX * (LY - YMC)
-        self.bslx = T * self.dx / IT if IT != 0 else 0.0
-        self.bsly = T * self.dy / IT if IT != 0 else 0.0
+        T = PY * (LX - XC) - PX * (LY - YC)
+        self.bslx = T * self.sdx / IT if IT != 0 else 0.0
+        self.bsly = T * self.sdy / IT if IT != 0 else 0.0
         # Total shear is vector sum of direct and secondary
         self.tbsl = np.hypot(direct_shear_x + self.bslx, direct_shear_y + self.bsly)
 
@@ -68,26 +70,23 @@ for i in range(num_bolts):
     bolts.append(Bolt(x, y, ks, ka))
 
 # --- CALCULATION SECTION ---
-def compute_shear_centroid(bolts):
+def compute_centroids(bolts):
     TK = sum(b.ks for b in bolts)
+    KAT = sum(b.ka for b in bolts)
     x1 = sum(b.x * b.ks for b in bolts)
     y1 = sum(b.y * b.ks for b in bolts)
-    XC = x1 / TK if TK else 0.0
-    YC = y1 / TK if TK else 0.0
-    return XC, YC, TK
-
-def compute_axial_centroid(bolts):
-    KAT = sum(b.ka for b in bolts)
     xm1 = sum(b.x * b.ka for b in bolts)
     ym1 = sum(b.y * b.ka for b in bolts)
+    XC = x1 / TK if TK else 0.0
+    YC = y1 / TK if TK else 0.0
     XMC = xm1 / KAT if KAT else 0.0
     YMC = ym1 / KAT if KAT else 0.0
-    return XMC, YMC, KAT
+    return XC, YC, XMC, YMC, TK, KAT
 
 def compute_reference_inertias(bolts):
-    IX = sum(b.ka * b.dy**2 for b in bolts)
-    IY = sum(b.ka * b.dx**2 for b in bolts)
-    IXY = sum(b.ka * b.dx * b.dy for b in bolts)
+    IX = sum(b.ka * b.ady**2 for b in bolts)
+    IY = sum(b.ka * b.adx**2 for b in bolts)
+    IXY = sum(b.ka * b.adx * b.ady for b in bolts)
     return IX, IY, IXY
 
 def compute_principal_axes(IX, IY, IXY):
@@ -104,8 +103,8 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
     IPX = 0.0
     IPY = 0.0
     for b in bolts:  
-        xp = b.dx * np.cos(theta_rad) + b.dy * np.sin(theta_rad)
-        yp = -b.dx * np.sin(theta_rad) + b.dy * np.cos(theta_rad)
+        xp = b.adx * np.cos(theta_rad) + b.ady * np.sin(theta_rad)
+        yp = -b.adx * np.sin(theta_rad) + b.ady * np.cos(theta_rad)
         IPX += b.ka * xp**2
         IPY += b.ka * yp**2
     return IPX, IPY
@@ -140,45 +139,21 @@ def resolved_moments(OMX, OMY, theta):
 
 # --- DISPLAY RESULTS ---
 if bolts:
-    # Compute both centroids
-    XC, YC, TK = compute_shear_centroid(bolts)
-    XMC, YMC, KAT = compute_axial_centroid(bolts)
-
-    # Use axial centroid for tensile calculations
+    XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
     for b in bolts:
         b.distance_from_centroid(XMC, YMC)
+    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
     IX, IY, IXY = compute_reference_inertias(bolts)
     theta = compute_principal_axes(IX, IY, IXY)
     for b in bolts:
         b.prime_distance_from_centroid(theta)
-    IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
-
-    # Use shear centroid for shear calculations
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
-
-    IT = np.sum(np.hypot([b.x - XC for b in bolts], [b.y - YC for b in bolts])**2)
-
+    IT = np.sum(np.hypot(b.sdx, b.sdy)**2 for b in bolts)
     st.write(f"PX={PX}, PY={PY}, PZ={PZ}")
     st.write(f"LX={LX}, LY={LY}, LZ={LZ}")
     st.write(f"XMC={XMC}, YMC={YMC}")
-    st.write(f"XC={XC}, YC={YC}")
     OMX, OMY = overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC)
     POMX, POMY = resolved_moments(OMX, OMY, theta)
-
-    st.write(f"OMX: {OMX:.3f}, OMY: {OMY:.3f}")
-    st.write(f"POMX: {POMX:.3f}, POMY: {POMY:.3f}")
-    st.write(f"IPX: {IPX:.3f}, IPY: {IPY:.3f}")
-    st.write(f"IT: {IT:.3f}")
-
-    T = PY * (LX - XC) - PX * (LY - YC)
-    st.write(f"T (Torsional moment about shear centroid): {T:.3f}")
-
-    for i, b in enumerate(bolts):
-        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
-        direct_shear_x = shear_forces[i][2]
-        direct_shear_y = shear_forces[i][3]
-        # Use shear centroid for secondary shear
-        b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, direct_shear_x, direct_shear_y)
+    IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
 # Debug print for key values
     st.write(f"OMX: {OMX:.3f}, OMY: {OMY:.3f}")
@@ -324,10 +299,12 @@ if bolts:
         "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
         "X": [b.x for b in bolts],
         "Y": [b.y for b in bolts],
-        "dx": [b.dx for b in bolts],
-        "dy": [b.dy for b in bolts],
-        "ddx": [getattr(b, 'ddx', 0.0) for b in bolts],
-        "ddy": [getattr(b, 'ddy', 0.0) for b in bolts],
+        "sdx": [b.sdx for b in bolts],
+        "sdy": [b.sdy for b in bolts],
+        "adx": [b.adx for b in bolts],
+        "ady": [b.ady for b in bolts],
+        "addx": [getattr(b, 'addx', 0.0) for b in bolts],
+        "addy": [getattr(b, 'addy', 0.0) for b in bolts],
         "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
         "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
         "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
@@ -336,5 +313,5 @@ if bolts:
         "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
     })
 
-    numeric_cols = ["X", "Y", "dx", "dy", "ddx", "ddy", "tblx (Mx')", "tbly (My')", "ttbl (Total Tension)", "bslx (Sec. Shear X)", "bsly (Sec. Shear Y)", "tbsl (Total Shear)"]
+    numeric_cols = ["X", "Y", "sdx", "sdy", "adx", "ady", "addx", "addy", "tblx (Mx')", "tbly (My')", "ttbl (Total Tension)", "bslx (Sec. Shear X)", "bsly (Sec. Shear Y)", "tbsl (Total Shear)"]
 st.dataframe(debug_df.style.format({col: "{:.4f}" for col in numeric_cols}))
