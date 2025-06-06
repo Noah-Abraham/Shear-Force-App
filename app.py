@@ -36,13 +36,16 @@ class Bolt:
         # Total tension is algebraic sum (not vector sum)
         self.ttbl = VZ + self.tblx + self.tbly
 
-    def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, direct_shear_x, direct_shear_y):
-        # Torsional moment about centroid
+    def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
+        # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        self.bslx = (T * self.sdx / IT) + PX / num_bolts
-        self.bsly = (T * self.sdy / IT) + PY / num_bolts
-        # Total shear is vector sum of direct and secondary
-        self.tbsl = np.hypot(self.bslx, self.bsly)
+        Fx = T * (self.x - XC) / IT if IT != 0 else 0.0
+        Fy = T * (self.y - YC) / IT if IT != 0 else 0.0
+        Vx = Fx + PX / num_bolts
+        Vy = Fy + PY / num_bolts
+        self.bslx = Vx
+        self.bsly = Vy
+        self.tbsl = np.hypot(Vx, Vy)
 
 # --- INPUT SECTION ---
 
@@ -166,9 +169,7 @@ if bolts:
 
     for i, b in enumerate(bolts):
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
-        direct_shear_x = shear_forces[i][2]
-        direct_shear_y = shear_forces[i][3]
-        b.secondary_shear(PX, PY, LX, LY, XMC, YMC, IT, direct_shear_x, direct_shear_y)
+        b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, num_bolts)
 
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
