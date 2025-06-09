@@ -39,10 +39,10 @@ class Bolt:
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
         # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        Fx = T * (self.x - XC) / IT if IT != 0 else 0.0
-        Fy = T * (self.y - YC) / IT if IT != 0 else 0.0
-        Vx = Fx + PX / num_bolts
-        Vy = Fy + PY / num_bolts
+        Fx = T * self.sdx / IT 
+        Fy = T * self.sdy / IT 
+        Vx = Fx + (PX / num_bolts)
+        Vy = Fy + (PY / num_bolts)
         self.bslx = Vx
         self.bsly = Vy
         self.tbsl = np.hypot(Vx, Vy)
@@ -144,7 +144,7 @@ def resolved_moments(OMX, OMY, theta):
 if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
     for b in bolts:
-        b.distance_from_centroid(XMC, YMC, XC, YC)
+        b.distance_from_centroid(XMC, YMC)
     shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
     IX, IY, IXY = compute_reference_inertias(bolts)
     theta = compute_principal_axes(IX, IY, IXY)
@@ -164,7 +164,7 @@ if bolts:
     st.write(f"IPX: {IPX:.3f}, IPY: {IPY:.3f}")
     st.write(f"IT: {IT:.3f}")
 
-    T = PY * (LX - XMC) - PX * (LY - YMC)
+    T = PY * (LX - XC) - PX * (LY - YC)
     st.write(f"T (Torsional moment about centroid): {T:.3f}")
 
     for i, b in enumerate(bolts):
