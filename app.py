@@ -39,8 +39,8 @@ class Bolt:
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
         # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        Fx = T * self.sdx / IT if IT != 0 else 0.0
-        Fy = T * self.sdy / IT if IT != 0 else 0.0
+        Fx = T * self.sdx / IT 
+        Fy = T * self.sdy / IT 
         Vx = Fx + (PX / num_bolts)
         Vy = Fy + (PY / num_bolts)
         self.bslx = Vx
@@ -112,6 +112,7 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * yp**2
     return IPX, IPY
 
+
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
     OMX = PX * LZ + PZ * (XMC - LX)
     OMY = PY * LZ + PZ * (YMC - LY)
@@ -140,7 +141,7 @@ if bolts:
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
-    # Debug print for key values
+# Debug print for key values
     st.write(f"OMX: {OMX:.3f}, OMY: {OMY:.3f}")
     st.write(f"POMX: {POMX:.3f}, POMY: {POMY:.3f}")
     st.write(f"IPX: {IPX:.3f}, IPY: {IPY:.3f}")
@@ -149,7 +150,6 @@ if bolts:
     T = PY * (LX - XC) - PX * (LY - YC)
     st.write(f"T (Torsional moment about centroid): {T:.3f}")
 
-    # Calculate bolt forces
     for b in bolts:
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
         b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, num_bolts)
