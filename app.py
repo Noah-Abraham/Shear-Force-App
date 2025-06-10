@@ -201,44 +201,69 @@ if bolts:
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
-    fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
-
-    vector_extent = []
-    for b in bolts:
-        if view_option == "XY View":
-            vector_extent.append((b.x + b.bslx * vector_display_scale, b.y + b.bsly * vector_display_scale))
-        elif view_option == "XZ View":
-            vector_extent.append((b.x, b.ttbl * vector_display_scale))
-        elif view_option == "YZ View":
-            vector_extent.append((b.y, b.ttbl * vector_display_scale))
-
-    all_x = [b.x for b in bolts]
-    all_y = [b.y for b in bolts]
-    if view_option == "XY View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "XZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-    elif view_option == "YZ View":
-        all_x += [pt[0] for pt in vector_extent]
-        all_y += [pt[1] for pt in vector_extent]
-
-    x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
-    y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
-
-    ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
-    ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
-    ax.set_title(f"Bolt Force Vectors ({view_option})")
-    ax.set_xlabel(view_option[0] + " Position")
-    ax.set_ylabel(view_option[1] + " Position")
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
 from collections import defaultdict
 
+fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
+
+# Plot bolts and vectors
+for b in bolts:
+    if view_option == "XY View":
+        ax.plot(b.x, b.y, 'ro')
+        ax.quiver(
+            b.x, b.y,
+            b.bslx * vector_display_scale, b.bsly * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='blue'
+        )
+    elif view_option == "XZ View":
+        ax.plot(b.x, 0, 'ro')
+        ax.quiver(
+            b.x, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='green'
+        )
+    elif view_option == "YZ View":
+        ax.plot(b.y, 0, 'ro')
+        ax.quiver(
+            b.y, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='purple'
+        )
+
+# Calculate plot extents
+vector_extent = []
+for b in bolts:
+    if view_option == "XY View":
+        vector_extent.append((b.x + b.bslx * vector_display_scale, b.y + b.bsly * vector_display_scale))
+    elif view_option == "XZ View":
+        vector_extent.append((b.x, b.ttbl * vector_display_scale))
+    elif view_option == "YZ View":
+        vector_extent.append((b.y, b.ttbl * vector_display_scale))
+
+all_x = [b.x for b in bolts]
+all_y = [b.y for b in bolts]
+if view_option == "XY View":
+    all_x += [pt[0] for pt in vector_extent]
+    all_y += [pt[1] for pt in vector_extent]
+elif view_option == "XZ View":
+    all_x += [pt[0] for pt in vector_extent]
+    all_y += [pt[1] for pt in vector_extent]
+elif view_option == "YZ View":
+    all_x += [pt[0] for pt in vector_extent]
+    all_y += [pt[1] for pt in vector_extent]
+
+x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
+y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
+
+ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
+ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
+ax.set_title(f"Bolt Force Vectors ({view_option})")
+ax.set_xlabel(view_option[0] + " Position")
+ax.set_ylabel(view_option[1] + " Position")
+ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+# --- LABELS ---
 if view_option == "XY View":
     for i, b in enumerate(bolts):
-        # Offset opposite to vector direction
         dx = -np.sign(b.bslx) * 0.4 if b.bslx != 0 else 0.4
         dy = -np.sign(b.bsly) * 0.4 if b.bsly != 0 else 0.4
         ax.text(
@@ -247,7 +272,6 @@ if view_option == "XY View":
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
 elif view_option == "XZ View":
-    # Group by x
     x_groups = defaultdict(list)
     for i, b in enumerate(bolts):
         x_groups[b.x].append(str(i+1))
@@ -259,7 +283,6 @@ elif view_option == "XZ View":
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
 elif view_option == "YZ View":
-    # Group by y
     y_groups = defaultdict(list)
     for i, b in enumerate(bolts):
         y_groups[b.y].append(str(i+1))
