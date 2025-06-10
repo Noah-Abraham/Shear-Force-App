@@ -1,7 +1,8 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
-
+import pandas as pd
+from collections import defaultdict
 
 st.title("Shear Force & Axial Bolt Load Calculator")
 
