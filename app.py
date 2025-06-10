@@ -202,7 +202,7 @@ if bolts:
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
-    from collections import defaultdict
+from collections import defaultdict
 
 fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
@@ -295,54 +295,58 @@ elif view_option == "YZ View":
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
 
-    # Plot centroids and load point
-    if view_option == "XY View": 
-        ax.plot(LX, LY, 'kx', label='Load Point')
-        ax.plot(XC, YC, 'bs', label='Shear Centroid')
-        ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
-    elif view_option == "YZ View":
-        ax.plot(LY, LZ, 'kx', label='Load Point')
-        ax.plot(YC, 0, 'bs', label='Shear Centroid')
-        ax.plot(YMC, 0, 'gs', label='Axial Centroid')
-    elif view_option == "XZ View":
-        ax.plot(LX, LZ, 'kx', label='Load Point')
-        ax.plot(XC, 0, 'bs', label='Shear Centroid')
-        ax.plot(XMC, 0, 'gs', label='Axial Centroid')
+# --- Plot centroids and load point (always runs) ---
+if view_option == "XY View": 
+    ax.plot(LX, LY, 'kx', label='Load Point')
+    ax.plot(XC, YC, 'bs', label='Shear Centroid')
+    ax.plot(XMC, YMC, 'gs', label='Axial Centroid')
+elif view_option == "YZ View":
+    ax.plot(LY, LZ, 'kx', label='Load Point')
+    ax.plot(YC, 0, 'bs', label='Shear Centroid')
+    ax.plot(YMC, 0, 'gs', label='Axial Centroid')
+elif view_option == "XZ View":
+    ax.plot(LX, LZ, 'kx', label='Load Point')
+    ax.plot(XC, 0, 'bs', label='Shear Centroid')
+    ax.plot(XMC, 0, 'gs', label='Axial Centroid')
 
-    ax.legend()
-    ax.set_aspect('equal', 'box')
-    st.pyplot(fig)
+ax.legend()
+ax.set_aspect('equal', 'box')
+st.pyplot(fig)
 
-    import pandas as pd
-    st.subheader("Force Summary Table")
+import pandas as pd
+st.subheader("Force Summary Table")
 
-    force_df = pd.DataFrame({
-        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-        "X": [b.x for b in bolts],
-        "Y": [b.y for b in bolts],
-        "Total Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
-        "Total Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
-    })
-    force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
-    st.dataframe(force_df.style.format({col: "{:.3f}" for col in force_df.select_dtypes(include=["float", "int"]).columns}))
+force_df = pd.DataFrame({
+    "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
+    "X": [b.x for b in bolts],
+    "Y": [b.y for b in bolts],
+    "Total Tensile Load (kN)": [round(b.ttbl, 3) for b in bolts],
+    "Total Shear Load (kN)": [round(b.tbsl, 3) for b in bolts],
+})
+force_df.index = [f"Bolt {i+1}" for i in range(len(bolts))]
+st.dataframe(force_df.style.format({col: "{:.3f}" for col in force_df.select_dtypes(include=["float", "int"]).columns}))
 
-    debug_df = pd.DataFrame({
-        "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
-        "X": [b.x for b in bolts],
-        "Y": [b.y for b in bolts],
-        "sdx": [b.sdx for b in bolts],
-        "sdy": [b.sdy for b in bolts],
-        "adx": [b.adx for b in bolts],
-        "ady": [b.ady for b in bolts],
-        "addx": [getattr(b, 'addx', 0.0) for b in bolts],
-        "addy": [getattr(b, 'addy', 0.0) for b in bolts],
-        "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
-        "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
-        "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
-        "bslx (Sec. Shear X)": [getattr(b, 'bslx', 0.0) for b in bolts],
-        "bsly (Sec. Shear Y)": [getattr(b, 'bsly', 0.0) for b in bolts],
-        "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
-    })
+debug_df = pd.DataFrame({
+    "Bolt ID": [f"{i+1}" for i in range(len(bolts))],
+    "X": [b.x for b in bolts],
+    "Y": [b.y for b in bolts],
+    "sdx": [b.sdx for b in bolts],
+    "sdy": [b.sdy for b in bolts],
+    "adx": [b.adx for b in bolts],
+    "ady": [b.ady for b in bolts],
+    "addx": [getattr(b, 'addx', 0.0) for b in bolts],
+    "addy": [getattr(b, 'addy', 0.0) for b in bolts],
+    "tblx (Mx')": [getattr(b, 'tblx', 0.0) for b in bolts],
+    "tbly (My')": [getattr(b, 'tbly', 0.0) for b in bolts],
+    "ttbl (Total Tension)": [getattr(b, 'ttbl', 0.0) for b in bolts],
+    "bslx (Sec. Shear X)": [getattr(b, 'bslx', 0.0) for b in bolts],
+    "bsly (Sec. Shear Y)": [getattr(b, 'bsly', 0.0) for b in bolts],
+    "tbsl (Total Shear)": [getattr(b, 'tbsl', 0.0) for b in bolts],
+})
 
-    numeric_cols = ["X", "Y", "sdx", "sdy", "adx", "ady", "addx", "addy", "tblx (Mx')", "tbly (My')", "ttbl (Total Tension)", "bslx (Sec. Shear X)", "bsly (Sec. Shear Y)", "tbsl (Total Shear)"]
-    st.dataframe(debug_df.style.format({col: "{:.4f}" for col in numeric_cols}))
+numeric_cols = [
+    "X", "Y", "sdx", "sdy", "adx", "ady", "addx", "addy",
+    "tblx (Mx')", "tbly (My')", "ttbl (Total Tension)",
+    "bslx (Sec. Shear X)", "bsly (Sec. Shear Y)", "tbsl (Total Shear)"
+]
+st.dataframe(debug_df.style.format({col: "{:.4f}" for col in numeric_cols}))
