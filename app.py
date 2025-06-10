@@ -29,25 +29,41 @@ class Bolt:
         self.addx = r * np.cos(theta_rad - phi)
         self.addy = r * np.sin(theta_rad - phi)
 
-    def tensile_bolt_loads(self, POMX, POMY, IPX, IPY, PZ, num_bolts):
+    def tension_calculation(self, POMX, POMY, IPX, IPY, PZ, MX, MY, num_bolts):
         # Direct tension from axial force
         VZ = PZ / num_bolts if num_bolts else 0.0
         # Moment-induced tension (principal axes)
         self.tblx = -POMX * self.addx / IPX if IPX != 0 else 0.0
         self.tbly = POMY * self.addy / IPY if IPY != 0 else 0.0
-        # Total tension is algebraic sum (not vector sum)
-        self.ttbl = VZ + self.tblx + self.tbly
 
-    def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
+        # Tension due to External Moments
+        self.Pmx = MX * self.ady / IPX if IPX != 0 else 0.0
+        self.Pmy = MY * self.adx / IPY if IPY != 0 else 0.0
+
+        # Total tension is algebraic sum (not vector sum)
+        self.ttbl = VZ + self.tblx + self.tbly + self.Pmx + self.Pmy
+
+    def shear_calculation(self, PX, PY, LX, LY, XC, YC, IT, MZ, num_bolts):
+        # Calculating shear forces from primary + secondary 
         T = PY * (LX - XC) - PX * (LY - YC)
         self.Fx = T * self.sdx / IT if IT != 0 else 0.0
         self.Fy = T * self.sdy / IT if IT != 0 else 0.0
         self.T = T
         self.PXn = PX / num_bolts
         self.PYn = PY / num_bolts
+
+        # Calculating shear forces from external moment
+        self.r = np.hypot(self.adx, self.ady)
+        self.theta = np.arctan2(self.r, self.y)
+        self.Ft = MZ * self.r / IT if IT != 0 else 0.0
+        self.Ftx = -self.Ft * np.sin(self.theta)
+        self.Fty = self.Ft * np.cos(self.theta)
+
         # Switching X and Y because they were reversed on the test case, may be incorrect
-        self.bslx = self.Fx + self.PYn
-        self.bsly = self.Fy + self.PXn
+        self.bslx = self.Fx + self.PYn + self.Ftx
+        self.bsly = self.Fy + self.PXn + self.Fty
+
+        # Calculate total shear force
         self.tbsl = np.hypot(self.bslx, self.bsly)
 
 # --- INPUT SECTION ---
@@ -155,8 +171,8 @@ if bolts:
 
     # Calculate bolt forces (this is the ONLY loop)
     for b in bolts:
-        b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
-        b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, num_bolts)
+        b.tension_calculation(POMX, POMY, IPX, IPY, PZ, MX, MY, num_bolts)
+        b.shear_calculation(PX, PY, LX, LY, XC, YC, IT, MZ, num_bolts)
         # --- Debug: Calculate and store Fx, Fy, T for each bolt ---
         T_debug = PY * (LX - XC) - PX * (LY - YC)
         b.Fx_debug = T_debug * b.sdx / IT if IT != 0 else 0.0
