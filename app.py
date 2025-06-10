@@ -112,22 +112,6 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * yp**2
     return IPX, IPY
 
-def compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ):
-    KAT = sum(b.ka for b in bolts)
-    RS = sum((np.hypot(b.x - XC, b.y - YC))**2 for b in bolts)
-    forces = []
-    for b in bolts:
-        rx = b.x - XC
-        ry = YC - b.y
-        fx = PX * b.ks / TK if TK else 0.0
-        fy = PY * b.ks / TK if TK else 0.0
-        ftx = MZ * ry * b.ks / RS if RS else 0.0
-        fty = MZ * rx * b.ks / RS if RS else 0.0
-        vx = fx + ftx
-        vy = fy + fty
-        vz = PZ * b.ka / KAT if KAT else 0.0
-        forces.append((b.x, b.y, vx, vy, vz))
-    return forces
 
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
     OMX = PX * LZ + PZ * (XMC - LX)
@@ -145,7 +129,6 @@ if bolts:
     XC, YC, XMC, YMC, TK, KAT = compute_centroids(bolts)
     for b in bolts:
         b.distance_from_centroid(XMC, YMC, XC, YC)
-    shear_forces = compute_shear_forces(bolts, PX, PY, MZ, XC, YC, TK, PZ)
     IX, IY, IXY = compute_reference_inertias(bolts)
     theta = compute_principal_axes(IX, IY, IXY)
     for b in bolts:
@@ -189,7 +172,7 @@ if bolts:
     layout_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = 0.25 * layout_span
 
-    force_mags = [np.hypot(vx, vy) for _, _, vx, vy, _ in shear_forces]
+    force_mags = [b.tbsl for b in bolts]
     max_force = max(force_mags) if force_mags else 1
     bolt_span = max(max(b.x for b in bolts) - min(b.x for b in bolts), max(b.y for b in bolts) - min(b.y for b in bolts), 1e-6)
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
@@ -198,25 +181,13 @@ if bolts:
     fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
     vector_extent = []
-    from collections import defaultdict
-
-    bolt_positions = defaultdict(list)
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XZ View":
-            key = (round(x, 3), 0)
-        elif view_option == "YZ View":
-            key = (round(y, 3), 0)
-        else:
-            key = (round(x, 3), round(y, 3))
-        bolt_positions[key].append(i + 1)
-
-    for i, (x, y, vx, vy, vz) in enumerate(shear_forces):
-        if view_option == "XY View":
-            vector_extent.append((x + vx / normalized_arrow_scale, y + vy / normalized_arrow_scale))
-        elif view_option == "XZ View":
-            vector_extent.append((x, vz / normalized_arrow_scale))
-        elif view_option == "YZ View":
-            vector_extent.append((y, vz / normalized_arrow_scale))
+for i, b in enumerate(bolts):
+    if view_option == "XY View":
+        vector_extent.append((b.x + b.bslx * vector_display_scale, b.y + b.bsly * vector_display_scale))
+    elif view_option == "XZ View":
+        vector_extent.append((b.x, b.ttbl * vector_display_scale))
+    elif view_option == "YZ View":
+        vector_extent.append((b.y, b.ttbl * vector_display_scale))
 
     all_x = [b.x for b in bolts]
     all_y = [b.y for b in bolts]
