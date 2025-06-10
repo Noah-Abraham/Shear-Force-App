@@ -218,16 +218,13 @@ if bolts:
     # Arrow scaling based on plot span, not force
     vector_display_scale = 0.18 * plot_span / (max([np.hypot(b.bslx, b.bsly) for b in bolts] + [1e-6]))
 
-    # --- Compute all arrow tips for XY view for axis limits ---
     xy_arrow_tips = []
-    for b in bolts:
-        if view_option == "XY View":
+    if view_option == "XY View":
+        for b in bolts:
             tip_x = b.x + b.bslx * vector_display_scale
             tip_y = b.y + b.bsly * vector_display_scale
             xy_arrow_tips.append((tip_x, tip_y))
-
-    for i, b in enumerate(bolts):
-        if view_option == "XY View":
+        for i, b in enumerate(bolts):
             ax.plot(b.x, b.y, 'ro')
             ax.quiver(
                 b.x, b.y,
@@ -246,13 +243,47 @@ if bolts:
                 fontsize=10, color='black', ha='center', va='center',
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
             )
-
-    if view_option == "XZ View":
-        # ...existing XZ grouping code...
-        pass  # (keep your current code here)
+    elif view_option == "XZ View":
+        # Group by X position
+        x_groups = defaultdict(list)
+        for i, b in enumerate(bolts):
+            x_groups[round(b.x, 8)].append((i+1, b.ttbl))
+        for x, items in x_groups.items():
+            # Use the first bolt's ttbl for direction
+            direction = np.sign(items[0][1])
+            offset = label_offset * (direction if direction != 0 else 1)
+            label = " & ".join(str(idx) for idx, _ in items)
+            ax.plot(x, 0, 'ro')
+            ax.quiver(
+                x, 0,
+                0, items[0][1] * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='green'
+            )
+            ax.text(
+                x, offset, label,
+                fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+            )
     elif view_option == "YZ View":
-        # ...existing YZ grouping code...
-        pass  # (keep your current code here)
+        # Group by Y position
+        y_groups = defaultdict(list)
+        for i, b in enumerate(bolts):
+            y_groups[round(b.y, 8)].append((i+1, b.ttbl))
+        for y, items in y_groups.items():
+            direction = np.sign(items[0][1])
+            offset = label_offset * (direction if direction != 0 else 1)
+            label = " & ".join(str(idx) for idx, _ in items)
+            ax.plot(y, 0, 'ro')
+            ax.quiver(
+                y, 0,
+                0, items[0][1] * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='purple'
+            )
+            ax.text(
+                y, offset, label,
+                fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
+            )
 
     # --- Plot centroids and load point (always runs) ---
     if view_option == "XY View":
