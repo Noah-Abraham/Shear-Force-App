@@ -141,7 +141,7 @@ if bolts:
     POMX, POMY = resolved_moments(OMX, OMY, theta)
     IPX, IPY = compute_principal_moments(bolts, XMC, YMC, theta)
 
-# Debug print for key values
+    # Debug print for key values
     st.write(f"OMX: {OMX:.3f}, OMY: {OMY:.3f}")
     st.write(f"POMX: {POMX:.3f}, POMY: {POMY:.3f}")
     st.write(f"IPX: {IPX:.3f}, IPY: {IPY:.3f}")
@@ -150,9 +150,12 @@ if bolts:
     T = PY * (LX - XC) - PX * (LY - YC)
     st.write(f"T (Torsional moment about centroid): {T:.3f}")
 
+    # Calculate bolt forces (this is the ONLY loop)
     for b in bolts:
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
         b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, num_bolts)
+
+    # --- Everything below is OUTSIDE the for-loop, but INSIDE the if bolts: block ---
 
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
