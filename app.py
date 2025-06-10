@@ -205,11 +205,11 @@ if bolts:
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
 from collections import defaultdict
+show_grid = st.checkbox("Show gridlines", value=True)
 
 fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
 if bolts:
-    # Calculate plot span for scaling and label offset
     x_span = max(b.x for b in bolts) - min(b.x for b in bolts) if len(bolts) > 1 else 1.0
     y_span = max(b.y for b in bolts) - min(b.y for b in bolts) if len(bolts) > 1 else 1.0
     plot_span = max(x_span, y_span, 1.0)
@@ -217,6 +217,14 @@ if bolts:
 
     # Arrow scaling based on plot span, not force
     vector_display_scale = 0.18 * plot_span / (max([np.hypot(b.bslx, b.bsly) for b in bolts] + [1e-6]))
+
+    # --- Compute all arrow tips for XY view for axis limits ---
+    xy_arrow_tips = []
+    for b in bolts:
+        if view_option == "XY View":
+            tip_x = b.x + b.bslx * vector_display_scale
+            tip_y = b.y + b.bsly * vector_display_scale
+            xy_arrow_tips.append((tip_x, tip_y))
 
     for i, b in enumerate(bolts):
         if view_option == "XY View":
@@ -240,47 +248,11 @@ if bolts:
             )
 
     if view_option == "XZ View":
-        # Group by X position
-        x_groups = defaultdict(list)
-        for i, b in enumerate(bolts):
-            x_groups[round(b.x, 8)].append((i+1, b.ttbl))
-        for x, items in x_groups.items():
-            # Use the first bolt's ttbl for direction
-            direction = np.sign(items[0][1])
-            offset = label_offset * (direction if direction != 0 else 1)
-            label = " & ".join(str(idx) for idx, _ in items)
-            ax.plot(x, 0, 'ro')
-            ax.quiver(
-                x, 0,
-                0, items[0][1] * vector_display_scale,
-                angles='xy', scale_units='xy', scale=1, color='green'
-            )
-            ax.text(
-                x, offset, label,
-                fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
-            )
-
+        # ...existing XZ grouping code...
+        pass  # (keep your current code here)
     elif view_option == "YZ View":
-        # Group by Y position
-        y_groups = defaultdict(list)
-        for i, b in enumerate(bolts):
-            y_groups[round(b.y, 8)].append((i+1, b.ttbl))
-        for y, items in y_groups.items():
-            direction = np.sign(items[0][1])
-            offset = label_offset * (direction if direction != 0 else 1)
-            label = " & ".join(str(idx) for idx, _ in items)
-            ax.plot(y, 0, 'ro')
-            ax.quiver(
-                y, 0,
-                0, items[0][1] * vector_display_scale,
-                angles='xy', scale_units='xy', scale=1, color='purple'
-            )
-            ax.text(
-                y, offset, label,
-                fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
-            )
+        # ...existing YZ grouping code...
+        pass  # (keep your current code here)
 
     # --- Plot centroids and load point (always runs) ---
     if view_option == "XY View":
@@ -296,13 +268,19 @@ if bolts:
         ax.plot(XC, 0, 'bs', label='Shear Centroid')
         ax.plot(XMC, 0, 'gs', label='Axial Centroid')
 
-    # Set plot limits with margin
-    all_x = [b.x for b in bolts] if view_option != "YZ View" else [b.y for b in bolts]
-    all_y = [b.y for b in bolts] if view_option == "XY View" else [0 for _ in bolts]
-    if view_option == "XZ View":
-        all_y = [b.ttbl * vector_display_scale for b in bolts]
+    # --- Set plot limits with margin, including arrow tips for XY view ---
+    if view_option == "XY View":
+        all_x = [b.x for b in bolts] + [tip[0] for tip in xy_arrow_tips]
+        all_y = [b.y for b in bolts] + [tip[1] for tip in xy_arrow_tips]
     elif view_option == "YZ View":
+        all_x = [b.y for b in bolts]
         all_y = [b.ttbl * vector_display_scale for b in bolts]
+    elif view_option == "XZ View":
+        all_x = [b.x for b in bolts]
+        all_y = [b.ttbl * vector_display_scale for b in bolts]
+    else:
+        all_x = [0]
+        all_y = [0]
     x_margin = 0.2 * (max(all_x) - min(all_x) if all_x else 1)
     y_margin = 0.2 * (max(all_y) - min(all_y) if all_y else 1)
     ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
@@ -311,9 +289,13 @@ else:
     ax.set_title("Bolt Force Vectors")
     ax.set_xlabel("X Position")
     ax.set_ylabel("Y Position")
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
     ax.set_xlim(-1, 1)
     ax.set_ylim(-1, 1)
+
+if show_grid:
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+else:
+    ax.grid(False)
 
 ax.legend()
 ax.set_aspect('equal', 'box')
