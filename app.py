@@ -234,40 +234,73 @@ if bolts:
     ax.set_ylabel(view_option[1] + " Position")
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-from collections import defaultdict
+    # Now plot each bolt ONCE
+    from collections import defaultdict
 
-if view_option == "XY View":
-    for i, b in enumerate(bolts):
-        # Offset opposite to vector direction
-        dx = -np.sign(b.bslx) * 0.4 if b.bslx != 0 else 0.4
-        dy = -np.sign(b.bsly) * 0.4 if b.bsly != 0 else 0.4
+# Plot each bolt and vector as before (no labels yet)
+for b in bolts:
+    if view_option == "XY View":
+        ax.plot(b.x, b.y, 'ro')
+        ax.quiver(
+            b.x, b.y,
+            b.bslx * vector_display_scale, b.bsly * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='blue'
+        )
+    elif view_option == "XZ View":
+        ax.plot(b.x, 0, 'ro')
+        ax.quiver(
+            b.x, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='green'
+        )
+    elif view_option == "YZ View":
+        ax.plot(b.y, 0, 'ro')
+        ax.quiver(
+            b.y, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='purple'
+        )
+
+# --- GROUP BOLTS BY PLOTTED LOCATION AND ADD LABELS ---
+bolt_groups = defaultdict(list)
+for i, b in enumerate(bolts):
+    if view_option == "XY View":
+        key = (b.x, b.y)
+    elif view_option == "XZ View":
+        key = (b.x, 0)
+    elif view_option == "YZ View":
+        key = (b.y, 0)
+    bolt_groups[key].append((i, b))
+
+for key, group in bolt_groups.items():
+    if view_option == "XY View":
+        # Only shear in label
+        label_lines = [f"{i+1}: S={b.tbsl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_x, offset_y = 0.5, 0.5
         ax.text(
-            b.x + dx, b.y + dy, f"{i+1}",
-            fontsize=8, color='black', ha='center', va='center',
+            key[0] + offset_x, key[1] + offset_y, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
-elif view_option == "XZ View":
-    # Group by x
-    x_groups = defaultdict(list)
-    for i, b in enumerate(bolts):
-        x_groups[b.x].append(str(i+1))
-    for x, ids in x_groups.items():
-        label = " & ".join(ids)
+    elif view_option == "XZ View":
+        # Only tension in label
+        label_lines = [f"{i+1}: T={b.ttbl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_x, offset_z = 0.5, 0.5
         ax.text(
-            x, 0.7, label,
-            fontsize=8, color='black', ha='center', va='bottom',
+            key[0] + offset_x, key[1] + offset_z, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
-elif view_option == "YZ View":
-    # Group by y
-    y_groups = defaultdict(list)
-    for i, b in enumerate(bolts):
-        y_groups[b.y].append(str(i+1))
-    for y, ids in y_groups.items():
-        label = " & ".join(ids)
+    elif view_option == "YZ View":
+        # Only tension in label
+        label_lines = [f"{i+1}: T={b.ttbl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_y, offset_z = 0.5, 0.5
         ax.text(
-            y, 0.7, label,
-            fontsize=8, color='black', ha='center', va='bottom',
+            key[0] + offset_y, key[1] + offset_z, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
 
