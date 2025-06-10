@@ -43,8 +43,8 @@ class Bolt:
         self.T = T
         self.PXn = PX / num_bolts
         self.PYn = PY / num_bolts
-        self.bslx = self.Fx - self.PXn
-        self.bsly = self.Fy - self.PYn
+        self.bslx = self.Fx + self.PXn
+        self.bsly = self.Fy + self.PYn
         self.tbsl = np.hypot(self.bslx, self.bsly)
 
 # --- INPUT SECTION ---
