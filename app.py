@@ -43,8 +43,8 @@ class Bolt:
         Fy = T * self.sdy / IT 
         Vx = Fx + (PX / num_bolts)
         Vy = Fy + (PY / num_bolts)
-        self.bslx = Vx
-        self.bsly = Vy
+        self.bslx = Fx
+        self.bsly = Fy
         self.tbsl = np.hypot(Vx, Vy)
 
 # --- INPUT SECTION ---
