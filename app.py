@@ -201,98 +201,78 @@ if bolts:
     normalized_arrow_scale = (max_force / bolt_span) if max_force > 0 else 1
     vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
-from collections import defaultdict
+    fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
-fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
+    vector_extent = []
+    for b in bolts:
+        if view_option == "XY View":
+            vector_extent.append((b.x + b.bslx * vector_display_scale, b.y + b.bsly * vector_display_scale))
+        elif view_option == "XZ View":
+            vector_extent.append((b.x, b.ttbl * vector_display_scale))
+        elif view_option == "YZ View":
+            vector_extent.append((b.y, b.ttbl * vector_display_scale))
 
-# Plot bolts and vectors
-for b in bolts:
+    all_x = [b.x for b in bolts]
+    all_y = [b.y for b in bolts]
     if view_option == "XY View":
-        ax.plot(b.x, b.y, 'ro')
-        ax.quiver(
-            b.x, b.y,
-            b.bslx * vector_display_scale, b.bsly * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='blue'
-        )
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
     elif view_option == "XZ View":
-        ax.plot(b.x, 0, 'ro')
-        ax.quiver(
-            b.x, 0,
-            0, b.ttbl * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='green'
-        )
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
     elif view_option == "YZ View":
-        ax.plot(b.y, 0, 'ro')
-        ax.quiver(
-            b.y, 0,
-            0, b.ttbl * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='purple'
-        )
+        all_x += [pt[0] for pt in vector_extent]
+        all_y += [pt[1] for pt in vector_extent]
 
-# Calculate plot extents
-vector_extent = []
-for b in bolts:
-    if view_option == "XY View":
-        vector_extent.append((b.x + b.bslx * vector_display_scale, b.y + b.bsly * vector_display_scale))
-    elif view_option == "XZ View":
-        vector_extent.append((b.x, b.ttbl * vector_display_scale))
-    elif view_option == "YZ View":
-        vector_extent.append((b.y, b.ttbl * vector_display_scale))
+    x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
+    y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
 
-all_x = [b.x for b in bolts]
-all_y = [b.y for b in bolts]
-if view_option == "XY View":
-    all_x += [pt[0] for pt in vector_extent]
-    all_y += [pt[1] for pt in vector_extent]
-elif view_option == "XZ View":
-    all_x += [pt[0] for pt in vector_extent]
-    all_y += [pt[1] for pt in vector_extent]
-elif view_option == "YZ View":
-    all_x += [pt[0] for pt in vector_extent]
-    all_y += [pt[1] for pt in vector_extent]
+    ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
+    ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
+    ax.set_title(f"Bolt Force Vectors ({view_option})")
+    ax.set_xlabel(view_option[0] + " Position")
+    ax.set_ylabel(view_option[1] + " Position")
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-x_margin = 0.2 * (max(all_x) - min(all_x) if max(all_x) != min(all_x) else 1)
-y_margin = 0.2 * (max(all_y) - min(all_y) if max(all_y) != min(all_y) else 1)
-
-ax.set_xlim(min(all_x) - 1.25 * x_margin, max(all_x) + 1.25 * x_margin)
-ax.set_ylim(min(all_y) - 1.25 * y_margin, max(all_y) + 1.25 * y_margin)
-ax.set_title(f"Bolt Force Vectors ({view_option})")
-ax.set_xlabel(view_option[0] + " Position")
-ax.set_ylabel(view_option[1] + " Position")
-ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-# --- LABELS ---
-if view_option == "XY View":
+    # Now plot each bolt ONCE
     for i, b in enumerate(bolts):
-        dx = -np.sign(b.bslx) * 0.4 if b.bslx != 0 else 0.4
-        dy = -np.sign(b.bsly) * 0.4 if b.bsly != 0 else 0.4
-        ax.text(
-            b.x + dx, b.y + dy, f"{i+1}",
-            fontsize=8, color='black', ha='center', va='center',
-            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
-        )
-elif view_option == "XZ View":
-    x_groups = defaultdict(list)
-    for i, b in enumerate(bolts):
-        x_groups[b.x].append(str(i+1))
-    for x, ids in x_groups.items():
-        label = " & ".join(ids)
-        ax.text(
-            x, 0.7, label,
-            fontsize=8, color='black', ha='center', va='bottom',
-            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
-        )
-elif view_option == "YZ View":
-    y_groups = defaultdict(list)
-    for i, b in enumerate(bolts):
-        y_groups[b.y].append(str(i+1))
-    for y, ids in y_groups.items():
-        label = " & ".join(ids)
-        ax.text(
-            y, 0.7, label,
-            fontsize=8, color='black', ha='center', va='bottom',
-            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
-        )
+        if view_option == "XY View":
+            ax.plot(b.x, b.y, 'ro')
+            ax.quiver(
+                b.x, b.y,
+                b.bslx * vector_display_scale, b.bsly * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='blue'
+            )
+            offset_x = 0.4 if i % 2 == 0 else -0.4
+            offset_y = 0.4 if i % 3 == 0 else -0.4
+            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+            ax.text(
+                b.x + offset_x, b.y + offset_y, label_text,
+                fontsize=6, color='black', ha='center', va='center',
+                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
+            )
+        elif view_option == "XZ View":
+            ax.plot(b.x, 0, 'ro')
+            ax.quiver(
+                b.x, 0,
+                0, b.ttbl * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='green'
+            )
+            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+            offset_x = -0.25
+            offset_z = -0.25
+            ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+        elif view_option == "YZ View":
+            ax.plot(b.y, 0, 'ro')
+            ax.quiver(
+                b.y, 0,
+                0, b.ttbl * vector_display_scale,
+                angles='xy', scale_units='xy', scale=1, color='purple'
+            )
+            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
+            offset_y = -0.25
+            offset_z = -0.25
+            ax.text(b.y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
 
     # Plot centroids and load point
     if view_option == "XY View": 
