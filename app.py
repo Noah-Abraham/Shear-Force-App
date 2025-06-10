@@ -39,8 +39,8 @@ class Bolt:
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
         # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        Fx = T * self.sdx / IT 
-        Fy = T * self.sdy / IT 
+        Fx = T * self.sdx / IT if IT != 0 else 0.0
+        Fy = T * self.sdy / IT if IT != 0 else 0.0
         Vx = Fx + (PX / num_bolts)
         Vy = Fy + (PY / num_bolts)
         self.bslx = Vx
@@ -111,7 +111,6 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPX += b.ka * xp**2
         IPY += b.ka * yp**2
     return IPX, IPY
-
 
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
     OMX = PX * LZ + PZ * (XMC - LX)
