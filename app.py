@@ -236,31 +236,6 @@ if bolts:
 
 from collections import defaultdict
 
-# Plot each bolt and vector (no labels yet)
-for b in bolts:
-    if view_option == "XY View":
-        ax.plot(b.x, b.y, 'ro')
-        ax.quiver(
-            b.x, b.y,
-            b.bslx * vector_display_scale, b.bsly * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='blue'
-        )
-    elif view_option == "XZ View":
-        ax.plot(b.x, 0, 'ro')
-        ax.quiver(
-            b.x, 0,
-            0, b.ttbl * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='green'
-        )
-    elif view_option == "YZ View":
-        ax.plot(b.y, 0, 'ro')
-        ax.quiver(
-            b.y, 0,
-            0, b.ttbl * vector_display_scale,
-            angles='xy', scale_units='xy', scale=1, color='purple'
-        )
-
-# --- LABELS ---
 if view_option == "XY View":
     for i, b in enumerate(bolts):
         # Offset opposite to vector direction
