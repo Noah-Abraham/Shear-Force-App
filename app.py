@@ -234,10 +234,9 @@ if bolts:
     ax.set_ylabel(view_option[1] + " Position")
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-    # Now plot each bolt ONCE
-    from collections import defaultdict
+from collections import defaultdict
 
-# Plot each bolt and vector as before (no labels yet)
+# Plot each bolt and vector (no labels yet)
 for b in bolts:
     if view_option == "XY View":
         ax.plot(b.x, b.y, 'ro')
