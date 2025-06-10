@@ -39,8 +39,8 @@ class Bolt:
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
         # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        Fx = T * self.sdx / IT if IT != 0 else 0.0
-        Fy = T * self.sdy / IT if IT != 0 else 0.0
+        Fx = T * self.sdx / IT 
+        Fy = T * self.sdy / IT 
         Vx = Fx + (PX / num_bolts)
         Vy = Fy + (PY / num_bolts)
         self.bslx = Vx
@@ -112,6 +112,7 @@ def compute_principal_moments(bolts, XMC, YMC, theta):
         IPY += b.ka * yp**2
     return IPX, IPY
 
+
 def overturning_moments(PX, PY, PZ, LX, LY, LZ, XMC, YMC):
     OMX = PX * LZ + PZ * (XMC - LX)
     OMY = PY * LZ + PZ * (YMC - LY)
@@ -153,9 +154,27 @@ if bolts:
     for b in bolts:
         b.tensile_bolt_loads(POMX, POMY, IPX, IPY, PZ, num_bolts)
         b.secondary_shear(PX, PY, LX, LY, XC, YC, IT, num_bolts)
-
+        # --- Debug: Calculate and store Fx, Fy, T for each bolt ---
+        T_debug = PY * (LX - XC) - PX * (LY - YC)
+        b.Fx_debug = T_debug * b.sdx / IT if IT != 0 else 0.0
+        b.Fy_debug = T_debug * b.sdy / IT if IT != 0 else 0.0
+        b.T_debug = T_debug
     # --- Everything below is OUTSIDE the for-loop, but INSIDE the if bolts: block ---
-
+    st.subheader("Debug: Bolt Intermediary Values")
+    debug_fx_fy = []
+    for i, b in enumerate(bolts):
+        debug_fx_fy.append({
+            "Bolt": i+1,
+            "T (Torsion)": b.T_debug,
+            "sdx": b.sdx,
+            "sdy": b.sdy,
+            "Fx": b.Fx_debug,
+            "Fy": b.Fy_debug,
+            "Vx (Fx+PX/n)": b.bslx,
+            "Vy (Fy+PY/n)": b.bsly,
+        })
+    import pandas as pd
+    st.dataframe(pd.DataFrame(debug_fx_fy).set_index("Bolt").style.format("{:.4f}"))
     st.subheader("Centroid Locations")
     st.write(f"Shear Centroid (XC, YC): ({XC:.6f}, {YC:.6f})")
     st.write(f"Axial Centroid (XMC, YMC): ({XMC:.6f}, {YMC:.6f})")
