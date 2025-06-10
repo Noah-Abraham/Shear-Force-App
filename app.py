@@ -180,7 +180,6 @@ vector_display_scale = 1 / (3 * normalized_arrow_scale)
 
 fig, ax = plt.subplots(figsize=(7, 5), dpi=150)
 
-# Build vector_extent ONCE
 vector_extent = []
 for b in bolts:
     if view_option == "XY View":
@@ -190,10 +189,8 @@ for b in bolts:
     elif view_option == "YZ View":
         vector_extent.append((b.y, b.ttbl * vector_display_scale))
 
-# Calculate axis limits ONCE
 all_x = [b.x for b in bolts]
 all_y = [b.y for b in bolts]
-
 if view_option == "XY View":
     all_x += [pt[0] for pt in vector_extent]
     all_y += [pt[1] for pt in vector_extent]
@@ -214,6 +211,7 @@ ax.set_xlabel(view_option[0] + " Position")
 ax.set_ylabel(view_option[1] + " Position")
 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
+
 # Now plot each bolt ONCE
 for i, b in enumerate(bolts):
     if view_option == "XY View":
@@ -231,7 +229,6 @@ for i, b in enumerate(bolts):
             fontsize=6, color='black', ha='center', va='center',
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
         )
-
     elif view_option == "XZ View":
         ax.plot(b.x, 0, 'ro')
         ax.quiver(
@@ -243,7 +240,6 @@ for i, b in enumerate(bolts):
         offset_x = -0.25
         offset_z = -0.25
         ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-
     elif view_option == "YZ View":
         ax.plot(b.y, 0, 'ro')
         ax.quiver(
