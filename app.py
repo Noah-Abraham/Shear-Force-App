@@ -43,9 +43,8 @@ class Bolt:
         self.T = T
         self.PXn = PX / num_bolts
         self.PYn = PY / num_bolts
-        # Swapping X and Y because in the test case given it was reversed for some reason
-        self.bslx = self.Fx + self.PYn
-        self.bsly = self.Fy + self.PXn
+        self.bslx = self.Fx + self.PXn
+        self.bsly = self.Fy + self.PYn
         self.tbsl = np.hypot(self.bslx, self.bsly)
 
 # --- INPUT SECTION ---
@@ -236,44 +235,74 @@ if bolts:
     ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
     # Now plot each bolt ONCE
-    for i, b in enumerate(bolts):
-        if view_option == "XY View":
-            ax.plot(b.x, b.y, 'ro')
-            ax.quiver(
-                b.x, b.y,
-                b.bslx * vector_display_scale, b.bsly * vector_display_scale,
-                angles='xy', scale_units='xy', scale=1, color='blue'
-            )
-            offset_x = 0.4 if i % 2 == 0 else -0.4
-            offset_y = 0.4 if i % 3 == 0 else -0.4
-            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
-            ax.text(
-                b.x + offset_x, b.y + offset_y, label_text,
-                fontsize=6, color='black', ha='center', va='center',
-                bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
-            )
-        elif view_option == "XZ View":
-            ax.plot(b.x, 0, 'ro')
-            ax.quiver(
-                b.x, 0,
-                0, b.ttbl * vector_display_scale,
-                angles='xy', scale_units='xy', scale=1, color='green'
-            )
-            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
-            offset_x = -0.25
-            offset_z = -0.25
-            ax.text(b.x + offset_x, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
-        elif view_option == "YZ View":
-            ax.plot(b.y, 0, 'ro')
-            ax.quiver(
-                b.y, 0,
-                0, b.ttbl * vector_display_scale,
-                angles='xy', scale_units='xy', scale=1, color='purple'
-            )
-            label_text = f"{i+1}\nT: {b.ttbl:.2f} kN\nS: {b.tbsl:.2f} kN"
-            offset_y = -0.25
-            offset_z = -0.25
-            ax.text(b.y + offset_y, 0 + offset_z, label_text, fontsize=7, color='black', ha='right', va='top')
+    from collections import defaultdict
+
+# Plot each bolt and vector as before (no labels yet)
+for b in bolts:
+    if view_option == "XY View":
+        ax.plot(b.x, b.y, 'ro')
+        ax.quiver(
+            b.x, b.y,
+            b.bslx * vector_display_scale, b.bsly * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='blue'
+        )
+    elif view_option == "XZ View":
+        ax.plot(b.x, 0, 'ro')
+        ax.quiver(
+            b.x, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='green'
+        )
+    elif view_option == "YZ View":
+        ax.plot(b.y, 0, 'ro')
+        ax.quiver(
+            b.y, 0,
+            0, b.ttbl * vector_display_scale,
+            angles='xy', scale_units='xy', scale=1, color='purple'
+        )
+
+# --- GROUP BOLTS BY PLOTTED LOCATION AND ADD LABELS ---
+bolt_groups = defaultdict(list)
+for i, b in enumerate(bolts):
+    if view_option == "XY View":
+        key = (b.x, b.y)
+    elif view_option == "XZ View":
+        key = (b.x, 0)
+    elif view_option == "YZ View":
+        key = (b.y, 0)
+    bolt_groups[key].append((i, b))
+
+for key, group in bolt_groups.items():
+    if view_option == "XY View":
+        # Only shear in label
+        label_lines = [f"{i+1}: S={b.tbsl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_x, offset_y = 0.5, 0.5
+        ax.text(
+            key[0] + offset_x, key[1] + offset_y, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
+            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
+        )
+    elif view_option == "XZ View":
+        # Only tension in label
+        label_lines = [f"{i+1}: T={b.ttbl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_x, offset_z = 0.5, 0.5
+        ax.text(
+            key[0] + offset_x, key[1] + offset_z, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
+            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
+        )
+    elif view_option == "YZ View":
+        # Only tension in label
+        label_lines = [f"{i+1}: T={b.ttbl:.2f}kN" for i, b in group]
+        label_text = "\n".join(label_lines)
+        offset_y, offset_z = 0.5, 0.5
+        ax.text(
+            key[0] + offset_y, key[1] + offset_z, label_text,
+            fontsize=7, color='black', ha='left', va='bottom',
+            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.2')
+        )
 
     # Plot centroids and load point
     if view_option == "XY View": 
