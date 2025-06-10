@@ -226,7 +226,6 @@ if bolts:
                 b.bslx * vector_display_scale, b.bsly * vector_display_scale,
                 angles='xy', scale_units='xy', scale=1, color='blue'
             )
-            # Offset label away from arrow tip, enough for 3-digit IDs
             norm = np.hypot(b.bslx, b.bsly)
             if norm > 1e-8:
                 dx = label_offset * b.bslx / norm
@@ -239,32 +238,46 @@ if bolts:
                 fontsize=10, color='black', ha='center', va='center',
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
             )
-        elif view_option == "XZ View":
-            ax.plot(b.x, 0, 'ro')
+
+    if view_option == "XZ View":
+        # Group by X position
+        x_groups = defaultdict(list)
+        for i, b in enumerate(bolts):
+            x_groups[round(b.x, 8)].append((i+1, b.ttbl))
+        for x, items in x_groups.items():
+            # Use the first bolt's ttbl for direction
+            direction = np.sign(items[0][1])
+            offset = label_offset * (direction if direction != 0 else 1)
+            label = " & ".join(str(idx) for idx, _ in items)
+            ax.plot(x, 0, 'ro')
             ax.quiver(
-                b.x, 0,
-                0, b.ttbl * vector_display_scale,
+                x, 0,
+                0, items[0][1] * vector_display_scale,
                 angles='xy', scale_units='xy', scale=1, color='green'
             )
-            # Offset label above or below arrow, away from tip
-            direction = np.sign(b.ttbl)
-            offset = label_offset * (direction if direction != 0 else 1)
             ax.text(
-                b.x, offset, f"{i+1}",
+                x, offset, label,
                 fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
             )
-        elif view_option == "YZ View":
-            ax.plot(b.y, 0, 'ro')
+
+    elif view_option == "YZ View":
+        # Group by Y position
+        y_groups = defaultdict(list)
+        for i, b in enumerate(bolts):
+            y_groups[round(b.y, 8)].append((i+1, b.ttbl))
+        for y, items in y_groups.items():
+            direction = np.sign(items[0][1])
+            offset = label_offset * (direction if direction != 0 else 1)
+            label = " & ".join(str(idx) for idx, _ in items)
+            ax.plot(y, 0, 'ro')
             ax.quiver(
-                b.y, 0,
-                0, b.ttbl * vector_display_scale,
+                y, 0,
+                0, items[0][1] * vector_display_scale,
                 angles='xy', scale_units='xy', scale=1, color='purple'
             )
-            direction = np.sign(b.ttbl)
-            offset = label_offset * (direction if direction != 0 else 1)
             ax.text(
-                b.y, offset, f"{i+1}",
+                y, offset, label,
                 fontsize=10, color='black', ha='center', va='bottom' if direction >= 0 else 'top',
                 bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.3')
             )
