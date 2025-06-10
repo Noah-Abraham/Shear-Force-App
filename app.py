@@ -37,15 +37,15 @@ class Bolt:
         self.ttbl = VZ + self.tblx + self.tbly
 
     def secondary_shear(self, PX, PY, LX, LY, XC, YC, IT, num_bolts):
-        # Torsional moment about shear centroid
         T = PY * (LX - XC) - PX * (LY - YC)
-        Fx = T * self.sdx / IT 
-        Fy = T * self.sdy / IT 
-        Vx = Fx - (PX / num_bolts)
-        Vy = Fy - (PY / num_bolts)
-        self.bslx = Vx
-        self.bsly = Vy
-        self.tbsl = np.hypot(Vx, Vy)
+        self.Fx = T * self.sdx / IT if IT != 0 else 0.0
+        self.Fy = T * self.sdy / IT if IT != 0 else 0.0
+        self.T = T
+        self.PXn = PX / num_bolts
+        self.PYn = PY / num_bolts
+        self.bslx = self.Fx + self.PXn
+        self.bsly = self.Fy + self.PYn
+        self.tbsl = np.hypot(self.bslx, self.bsly)
 
 # --- INPUT SECTION ---
 
@@ -170,6 +170,8 @@ if bolts:
             "sdy": b.sdy,
             "Fx": b.Fx_debug,
             "Fy": b.Fy_debug,
+            "PX/n": b.PXn,
+            "PY/n": b.PYn,
             "Vx (Fx+PX/n)": b.bslx,
             "Vy (Fy+PY/n)": b.bsly,
         })
